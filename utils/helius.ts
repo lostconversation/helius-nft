@@ -15,6 +15,21 @@ export interface NFTAsset {
       description: string;
       image: string;
       uri: string;
+      attributes?: {
+        trait_type: string;
+        value: string;
+      }[];
+      properties?: {
+        creators?: {
+          address: string;
+          share: number;
+          verified?: boolean;
+        }[];
+        files?: {
+          uri: string;
+          type: string;
+        }[];
+      };
     };
     links?: {
       image?: string;
@@ -23,11 +38,19 @@ export interface NFTAsset {
   };
   authorities?: {
     address: string;
+    scopes?: string[];
   }[];
   collection?: {
     key: string;
+    name?: string;
+    family?: string;
   };
   mutable: boolean;
+  compression?: {
+    compressed: boolean;
+    leaf_id: string;
+    tree_id: string;
+  };
 }
 
 export async function fetchNFTsByOwner(
