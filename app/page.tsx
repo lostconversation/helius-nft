@@ -9,21 +9,17 @@ interface GroupedNFTs {
   [symbol: string]: NFTAsset[];
 }
 
-interface GroupedByCreator {
-  [creator: string]: NFTAsset[];
-}
-
 export default function Home() {
   const [nfts, setNfts] = useState<GroupedNFTs>({});
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState(
     "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC"
   );
-  const [viewType, setViewType] = useState<"created" | "owned">("created");
+  const [viewType, setViewType] = useState<"created" | "owned">("owned");
   const [openSymbols, setOpenSymbols] = useState<Set<string>>(new Set());
-  const [openRawData, setOpenRawData] = useState<Set<string>>(new Set());
   const [sortType, setSortType] = useState<"name" | "quantity">("name");
   const [allClustersOpen, setAllClustersOpen] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"grid" | "data">("grid");
 
   const getCreatorIdentifier = (nft: NFTAsset): string => {
     const dripHausUrl = nft.content.links?.external_url;
@@ -128,18 +124,6 @@ export default function Home() {
     });
   };
 
-  const toggleRawData = (nftId: string) => {
-    setOpenRawData((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(nftId)) {
-        newSet.delete(nftId);
-      } else {
-        newSet.add(nftId);
-      }
-      return newSet;
-    });
-  };
-
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -158,7 +142,7 @@ export default function Home() {
                 className={`px-4 py-2 rounded-lg ${
                   viewType === "owned"
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-700"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 Owned By
@@ -168,7 +152,7 @@ export default function Home() {
                 className={`px-4 py-2 rounded-lg ${
                   viewType === "created"
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-700"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 Created By
@@ -191,7 +175,7 @@ export default function Home() {
                 className={`px-4 py-2 rounded-lg ${
                   sortType === "name"
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-700"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 Order by Name
@@ -201,7 +185,7 @@ export default function Home() {
                 className={`px-4 py-2 rounded-lg ${
                   sortType === "quantity"
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-700"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 Order by Quantity
@@ -219,6 +203,41 @@ export default function Home() {
             >
               {allClustersOpen ? "Close All" : "Open All"}
             </button>
+
+            <div className="flex items-center">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={displayMode === "grid"}
+                  onChange={() =>
+                    setDisplayMode(displayMode === "data" ? "grid" : "data")
+                  }
+                  className="sr-only"
+                />
+                <div className="flex w-28 h-8 bg-gray-200 rounded-full">
+                  {/* Left Side (Grid) */}
+                  <div
+                    className={`flex-1 flex items-center justify-center transition-colors ${
+                      displayMode === "grid"
+                        ? "bg-blue-500 text-white rounded-l-full"
+                        : "text-gray-500 hover:bg-gray-300 hover:rounded-l-full"
+                    }`}
+                  >
+                    Grid
+                  </div>
+                  {/* Right Side (List) */}
+                  <div
+                    className={`flex-1 flex items-center justify-center transition-colors ${
+                      displayMode === "data"
+                        ? "bg-blue-500 text-white rounded-r-full"
+                        : "text-gray-500 hover:bg-gray-300 hover:rounded-r-full"
+                    }`}
+                  >
+                    List
+                  </div>
+                </div>
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -309,153 +328,109 @@ export default function Home() {
                           src={imageUrl}
                           alt={nft.content.metadata.name || "NFT Image"}
                         />
-                        <h2 className="text-2xl font-semibold mb-2 text-gray-800">
-                          {nft.content.metadata.name}
-                        </h2>
+                        <div className={displayMode === "grid" ? "hidden" : ""}>
+                          <h2 className="text-2xl font-semibold mb-2 text-gray-800">
+                            {nft.content.metadata.name}
+                          </h2>
 
-                        {description && (
-                          <p className="text-sm text-gray-600 mb-4">
-                            {description}
-                          </p>
-                        )}
-
-                        <ul className="text-sm text-gray-800 space-y-1">
-                          {/* Symbol (only if not empty) */}
-                          {nft.content.metadata.symbol && (
-                            <li>
-                              <strong>Symbol:</strong>{" "}
-                              {nft.content.metadata.symbol}
-                            </li>
+                          {description && (
+                            <p className="text-sm text-gray-600 mb-4">
+                              {description}
+                            </p>
                           )}
 
-                          {/* Attributes/Traits */}
-                          {attributes.length > 0 && (
-                            <li>
-                              <strong>Attributes:</strong>
-                              <ul className="pl-4">
-                                {attributes.map((attr, index) => (
-                                  <li key={index}>
-                                    {attr?.trait_type || attr?.traitType ? (
-                                      <span>
+                          <ul className="text-sm text-gray-800 space-y-1">
+                            {nft.content.metadata.symbol && (
+                              <li>
+                                <strong>Symbol:</strong>{" "}
+                                {nft.content.metadata.symbol}
+                              </li>
+                            )}
+
+                            {attributes.length > 0 && (
+                              <li>
+                                <strong>Attributes:</strong>
+                                <ul className="pl-4">
+                                  {attributes.map((attr, index) => (
+                                    <li key={index}>
+                                      {attr?.trait_type || attr?.traitType ? (
+                                        <span>
+                                          <span className="font-medium">
+                                            {attr.trait_type || attr.traitType}:
+                                          </span>{" "}
+                                          {attr.value}
+                                        </span>
+                                      ) : (
                                         <span className="font-medium">
-                                          {attr.trait_type || attr.traitType}:
-                                        </span>{" "}
-                                        {attr.value}
-                                      </span>
-                                    ) : (
-                                      <span className="font-medium">
-                                        Unknown Trait: {attr.value}
-                                      </span>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
+                                          Unknown Trait: {attr.value}
+                                        </span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </li>
+                            )}
+
+                            <li>
+                              <strong>Links:</strong>
+                              <div className="pl-4">
+                                {dripHausUrl && (
+                                  <a
+                                    href={dripHausUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:text-blue-700 underline block"
+                                  >
+                                    {dripHausUrl}
+                                  </a>
+                                )}
+                                <a
+                                  href={solscanUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:text-blue-700 underline block"
+                                >
+                                  View on Solscan
+                                </a>
+                                {animationUrl && (
+                                  <a
+                                    href={animationUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:text-blue-700 underline block"
+                                  >
+                                    View Animation
+                                  </a>
+                                )}
+                              </div>
                             </li>
-                          )}
 
-                          {/* Links */}
-                          <li>
-                            <strong>Links:</strong>
-                            <div className="pl-4">
-                              {/* Always show external URL */}
-                              {dripHausUrl && (
-                                <a
-                                  href={dripHausUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-500 hover:text-blue-700 underline block"
-                                >
-                                  {dripHausUrl}
-                                </a>
-                              )}
-                              <a
-                                href={solscanUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:text-blue-700 underline block"
-                              >
-                                View on Solscan
-                              </a>
-                              {animationUrl && (
-                                <a
-                                  href={animationUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-500 hover:text-blue-700 underline block"
-                                >
-                                  View Animation
-                                </a>
-                              )}
-                            </div>
-                          </li>
+                            <li className="break-all">
+                              <strong>ID:</strong> {nft.id}
+                            </li>
 
-                          {/* ID */}
-                          <li className="break-all">
-                            <strong>ID:</strong> {nft.id}
-                          </li>
+                            <li>
+                              <strong>Update Authority:</strong>{" "}
+                              <span className="break-all">
+                                {nft.authorities?.[0]?.address || "Unknown"}
+                              </span>
+                            </li>
 
-                          {/* Update Authority */}
-                          <li>
-                            <strong>Update Authority:</strong>{" "}
-                            <span className="break-all">
-                              {nft.authorities?.[0]?.address || "Unknown"}
-                            </span>
-                          </li>
+                            <li className="break-all">
+                              <strong>Mint:</strong> {nft.id}
+                            </li>
 
-                          {/* Mint */}
-                          <li className="break-all">
-                            <strong>Mint:</strong> {nft.id}
-                          </li>
+                            <li>
+                              <strong>Is Mutable:</strong>{" "}
+                              {nft.mutable ? "Yes" : "No"}
+                            </li>
 
-                          {/* Is Mutable */}
-                          <li>
-                            <strong>Is Mutable:</strong>{" "}
-                            {nft.mutable ? "Yes" : "No"}
-                          </li>
-
-                          {/* Compressed NFT */}
-                          <li>
-                            <strong>cNFT:</strong>{" "}
-                            {nft.compression?.compressed ? "Yes" : "No"}
-                          </li>
-                        </ul>
-
-                        {/* Raw Data Toggle Button */}
-                        <button
-                          onClick={() => toggleRawData(nft.id)}
-                          className="text-sm text-blue-500 hover:text-blue-700 underline mt-4"
-                        >
-                          {openRawData.has(nft.id)
-                            ? "Hide Raw Data"
-                            : "Show Raw Data"}
-                        </button>
-
-                        {/* Raw Data Display */}
-                        {openRawData.has(nft.id) && (
-                          <div className="mt-4 p-4 bg-gray-50 rounded-lg overflow-auto text-xs">
-                            <h3 className="font-bold mb-2 text-gray-800">
-                              Raw NFT Data:
-                            </h3>
-                            <pre className="whitespace-pre-wrap break-all text-gray-600">
-                              {JSON.stringify(
-                                {
-                                  id: nft.id,
-                                  content: {
-                                    metadata: nft.content.metadata,
-                                    links: nft.content.links,
-                                    json_uri: nft.content.json_uri,
-                                  },
-                                  authorities: nft.authorities,
-                                  collection: nft.collection,
-                                  mutable: nft.mutable,
-                                  compression: nft.compression,
-                                },
-                                null,
-                                2
-                              )}
-                            </pre>
-                          </div>
-                        )}
+                            <li>
+                              <strong>cNFT:</strong>{" "}
+                              {nft.compression?.compressed ? "Yes" : "No"}
+                            </li>
+                          </ul>
+                        </div>
                       </div>
                     );
                   })}
