@@ -20,7 +20,7 @@ export default function Home() {
     "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
   >("quantityDesc");
   const [displayMode, setDisplayMode] = useState<"grid" | "data">("grid");
-  const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("mosaic");
+  const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
   const [typeFilter, setTypeFilter] = useState<"all" | "drip" | "art" | "spam">(
     "all"
   );
@@ -534,7 +534,19 @@ export default function Home() {
                         <NFTImage
                           src={imageUrl}
                           alt={nft.content.metadata.name || "NFT Image"}
+                          layoutMode={layoutMode} // Pass the layoutMode prop
                         />
+                        {displayMode === "data" && (
+                          <div className="mt-2 text-gray-400">
+                            <p>Name: {nft.content.metadata.name}</p>
+                            <p>Symbol: {nft.content.metadata.symbol}</p>
+                            <p>Creator: {getCreatorIdentifier(nft)}</p>
+                            <p>
+                              Description: {nft.content.metadata.description}
+                            </p>
+                            {/* Add more metadata fields as needed */}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
