@@ -30,24 +30,15 @@ body {
 }
 
 .nft-image-container.mosaic {
-  /* height: 100%; */
-  width: 100%;
-  height: auto; /* Allow height to adjust in list view */
-  min-height: 150px; /* Set a minimum height to ensure visibility */
-  padding-bottom: 100%; /* This creates a square aspect ratio for mosaic view */
-}
-
-.nft-image-container.list {
-  width: 256px;
-  height: auto; /* Allow height to adjust in list view */
-  min-height: 150px; /* Set a minimum height to ensure visibility */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 0;
+  padding-bottom: 100%; /* This creates a square aspect ratio */
 }
 
 .nft-image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover; /* Ensures the image covers the container while maintaining aspect ratio */
 }

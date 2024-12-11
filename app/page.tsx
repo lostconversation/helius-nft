@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { fetchNFTsByOwner, NFTAsset } from "@/utils/helius";
-import { getImageUrl } from "@/utils/imageUtils";
 import { NFTImage } from "@/components/NFTImage";
 
 interface GroupedNFTs {
@@ -33,9 +32,9 @@ export default function Home() {
   >("clear");
   const [searchTerm, setSearchTerm] = useState("");
   const [additionalAddresses] = useState([
+    "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC",
     "HQA4k1mrf8gDMd2GK1JYV2Sgm6kghMSsDTJ1zyAHGMQr",
     "5hWu757purMHhha9THytqkNgv5Cqbim4ossod2PBUJwM",
-    "4iVmnes5XUvDZMEGEAmPXqftf7mSMkMNqfjJjFKQ7dJ6",
   ]);
 
   const gridSize = 4; // Number of slots per row
@@ -67,14 +66,57 @@ export default function Home() {
     return nft.authorities?.[0]?.address || "Unknown";
   };
 
+  const handleSortTypeChange = (
+    type: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
+  ) => {
+    console.log(`Changing sort type to: ${type}`);
+    setSortType(type);
+  };
+
   const loadNFTs = async () => {
     if (!address) return;
 
     setLoading(true);
     try {
+      console.log("Fetching NFTs for address:", address);
       const fetchedNFTs = await fetchNFTsByOwner(address, viewType);
 
-      const tempGrouped = fetchedNFTs.reduce((acc: GroupedNFTs, nft) => {
+      console.log("Fetched NFTs:", fetchedNFTs);
+
+      // Apply type and quantity filters
+      const filteredNFTs = fetchedNFTs.filter((nft) => {
+        const creatorId = getCreatorIdentifier(nft);
+
+        // Type filter
+        if (typeFilter !== "all") {
+          const isDrip = creatorId.startsWith("DRIP:");
+          const isArt = creatorId.startsWith("@");
+          if (
+            (typeFilter === "drip" && !isDrip) ||
+            (typeFilter === "art" && !isArt) ||
+            (typeFilter === "spam" && isDrip) // Assuming spam is the opposite of drip
+          ) {
+            return false;
+          }
+        }
+
+        // Quantity filter
+        const creatorNFTs = fetchedNFTs.filter(
+          (n) => getCreatorIdentifier(n) === creatorId
+        );
+        if (quantityFilter === ">3" && creatorNFTs.length <= 3) {
+          return false;
+        }
+        if (quantityFilter === "1" && creatorNFTs.length !== 1) {
+          return false;
+        }
+
+        return true;
+      });
+
+      console.log("Filtered NFTs:", filteredNFTs);
+
+      const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
         const creatorId = getCreatorIdentifier(nft);
         if (!acc[creatorId]) {
           acc[creatorId] = [];
@@ -83,43 +125,29 @@ export default function Home() {
         return acc;
       }, {});
 
-      const grouped: GroupedNFTs = {};
-      Object.entries(tempGrouped).forEach(([creatorId, nfts]) => {
-        if (creatorId.startsWith("DRIP:")) {
-          const artistName = creatorId.replace("DRIP: ", "");
-          Object.entries(tempGrouped).forEach(([otherId, otherNfts]) => {
-            if (
-              !otherId.startsWith("DRIP:") &&
-              artistName.toLowerCase() === otherId.toLowerCase()
-            ) {
-              nfts.push(...otherNfts);
-              delete tempGrouped[otherId];
-            }
-          });
-          grouped[creatorId] = nfts;
-        } else {
-          const matchingDripKey = Object.keys(tempGrouped).find(
-            (key) =>
-              key.startsWith("DRIP:") &&
-              key.replace("DRIP: ", "").toLowerCase() ===
-                creatorId.toLowerCase()
-          );
+      console.log("Grouped NFTs by creator:", tempGrouped);
 
-          if (!matchingDripKey && tempGrouped[creatorId]) {
-            grouped[creatorId] = nfts;
+      // Apply sorting based on sortType
+      const sortedGrouped = Object.entries(tempGrouped).sort(
+        ([aKey, aValue], [bKey, bValue]) => {
+          switch (sortType) {
+            case "quantityDesc":
+              return bValue.length - aValue.length;
+            case "quantityAsc":
+              return aValue.length - bValue.length;
+            case "nameAsc":
+              return aKey.localeCompare(bKey);
+            case "nameDesc":
+              return bKey.localeCompare(aKey);
+            default:
+              return 0;
           }
         }
-      });
+      );
 
-      Object.keys(grouped).forEach((creatorId) => {
-        grouped[creatorId].sort((a, b) => {
-          const nameA = a.content.metadata.name.toLowerCase();
-          const nameB = b.content.metadata.name.toLowerCase();
-          return nameA.localeCompare(nameB);
-        });
-      });
+      console.log("Sorted grouped NFTs:", sortedGrouped);
 
-      setNfts(grouped);
+      setNfts(Object.fromEntries(sortedGrouped));
     } catch (error) {
       console.error("Error loading NFTs:", error);
     } finally {
@@ -204,31 +232,28 @@ export default function Home() {
                     Created
                   </button>
                 </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center space-x-0">
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="flex-grow px-3 py-1 bg-gray-600 text-gray-200 rounded-l-lg"
-                    />
-                    <button
-                      onClick={loadNFTs}
-                      className="px-3 py-1 bg-blue-500 text-white hover:bg-blue-400 rounded-r-lg"
-                    >
-                      GO
-                    </button>
-                  </div>
-                  <div className="flex space-x-2 text-xs text-gray-400 mt-1">
-                    {additionalAddresses.map((addr, index) => (
-                      <span key={index} className="truncate">
-                        {addr}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="flex-grow px-3 py-1 bg-gray-600 text-gray-200 rounded-l-lg"
+                />
+                <button
+                  onClick={loadNFTs}
+                  className="px-3 py-1 bg-blue-500 text-white hover:bg-blue-400 rounded-r-lg"
+                >
+                  GO
+                </button>
+              </div>
+              <div className="flex space-x-2 text-xs text-gray-400 mt-1">
+                {additionalAddresses.map((addr, index) => (
+                  <span key={index} className="truncate">
+                    {addr}
+                  </span>
+                ))}
               </div>
             </div>
+
             <div className="flex flex-col space-y-1">
               <span className="text-xs text-gray-500">ARTIST</span>
               <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
@@ -353,7 +378,7 @@ export default function Home() {
           </div>
           <div className="flex justify-start items-start">
             <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500">NFT</span>
+              <span className="text-xs text-gray-500">VIEW</span>
               <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
                 <div className="flex space-x-0">
                   <button
@@ -377,6 +402,11 @@ export default function Home() {
                     List
                   </button>
                 </div>
+              </div>
+            </div>
+            <div className="flex flex-col space-y-1 ml-4">
+              <span className="text-xs text-gray-500">NFT</span>
+              <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
                 <div className="flex space-x-0">
                   <button
                     onClick={() => setDisplayMode("grid")}
@@ -466,6 +496,9 @@ export default function Home() {
           }`}
         >
           {Object.entries(nfts).map(([creator, creatorNFTs]) => {
+            console.log(
+              `Rendering NFTs for creator: ${creator}, count: ${creatorNFTs.length}`
+            );
             const isOpen = openSymbols.has(creator);
             const displayNFTs = isOpen ? creatorNFTs : [];
 
@@ -497,18 +530,11 @@ export default function Home() {
                       nft.content.json_uri;
 
                     return (
-                      <div
-                        key={nft.id}
-                        className={`bg-gray-700 rounded-lg p-4 ${
-                          layoutMode === "list" ? "list-view" : "mosaic"
-                        }`}
-                      >
-                        <div className={`nft-image-container ${layoutMode}`}>
-                          <NFTImage
-                            src={imageUrl}
-                            alt={nft.content.metadata.name || "NFT Image"}
-                          />
-                        </div>
+                      <div key={nft.id} className="bg-gray-700 rounded-lg p-4">
+                        <NFTImage
+                          src={imageUrl}
+                          alt={nft.content.metadata.name || "NFT Image"}
+                        />
                       </div>
                     );
                   })}
