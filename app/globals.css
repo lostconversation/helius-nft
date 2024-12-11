@@ -19,3 +19,35 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* Add this to your global CSS file or a CSS module */
+/* Add this to your global CSS file or a CSS module */
+/* Add this to your global CSS file or a CSS module */
+/* Add this to your global CSS file or a CSS module */
+.nft-image-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.nft-image-container.mosaic {
+  /* height: 100%; */
+  width: 100%;
+  height: auto; /* Allow height to adjust in list view */
+  min-height: 150px; /* Set a minimum height to ensure visibility */
+  padding-bottom: 100%; /* This creates a square aspect ratio for mosaic view */
+}
+
+.nft-image-container.list {
+  width: 256px;
+  height: auto; /* Allow height to adjust in list view */
+  min-height: 150px; /* Set a minimum height to ensure visibility */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nft-image-container img {
+  width: 100%;
+  height: auto;
+  object-fit: cover; /* Ensures the image covers the container while maintaining aspect ratio */
+}
