@@ -6,8 +6,12 @@ import Header from "@/components/Header";
 import ViewMosaic from "@/components/ViewMosaic";
 import ViewList from "@/components/ViewList";
 
+interface GroupedNFTs {
+  [symbol: string]: NFTAsset[];
+}
+
 export default function Home() {
-  const [nfts, setNfts] = useState<{ [symbol: string]: NFTAsset[] }>({});
+  const [nfts, setNfts] = useState<GroupedNFTs>({});
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState(
     "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC"
@@ -29,10 +33,11 @@ export default function Home() {
     "clear" | "all" | "animations" | "immutable" | "cNFT"
   >("clear");
   const [searchTerm, setSearchTerm] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedCreatorNFTs, setSelectedCreatorNFTs] = useState<NFTAsset[]>(
-    []
-  );
+  const [additionalAddresses] = useState([
+    "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC",
+    "HQA4k1mrf8gDMd2GK1JYV2Sgm6kghMSsDTJ1zyAHGMQr",
+    "5hWu757purMHhha9THytqkNgv5Cqbim4ossod2PBUJwM",
+  ]);
 
   const gridSize = 4; // Number of slots per row
 
@@ -113,17 +118,14 @@ export default function Home() {
 
       console.log("Filtered NFTs:", filteredNFTs);
 
-      const tempGrouped = filteredNFTs.reduce(
-        (acc: { [symbol: string]: NFTAsset[] }, nft) => {
-          const creatorId = getCreatorIdentifier(nft);
-          if (!acc[creatorId]) {
-            acc[creatorId] = [];
-          }
-          acc[creatorId].push(nft);
-          return acc;
-        },
-        {}
-      );
+      const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
+        const creatorId = getCreatorIdentifier(nft);
+        if (!acc[creatorId]) {
+          acc[creatorId] = [];
+        }
+        acc[creatorId].push(nft);
+        return acc;
+      }, {});
 
       console.log("Grouped NFTs by creator:", tempGrouped);
 
@@ -171,71 +173,79 @@ export default function Home() {
     });
   };
 
-  const openModal = (nfts: NFTAsset[]) => {
-    setSelectedCreatorNFTs(nfts);
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setSelectedCreatorNFTs([]);
+  const handleInspectorFilterChange = (filter: string) => {
+    setInspectorFilter(
+      filter as "clear" | "all" | "animations" | "immutable" | "cNFT"
+    );
+    if (filter === "clear") {
+      setOpenSymbols(new Set());
+    } else if (filter === "all") {
+      setOpenSymbols(new Set(Object.keys(nfts)));
+    } else {
+      const filteredSymbols = new Set<string>();
+      Object.entries(nfts).forEach(([creator, creatorNFTs]) => {
+        const hasMatchingNFTs = creatorNFTs.some((nft) => {
+          switch (filter) {
+            case "animations":
+              return nft.content.links?.animation_url;
+            case "immutable":
+              return !nft.mutable;
+            case "cNFT":
+              return nft.compression?.compressed;
+            default:
+              return true;
+          }
+        });
+        if (hasMatchingNFTs) {
+          filteredSymbols.add(creator);
+        }
+      });
+      setOpenSymbols(filteredSymbols);
+    }
   };
 
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen">
       <Header
+        address={address}
+        setAddress={setAddress}
         viewType={viewType}
         setViewType={setViewType}
         sortType={sortType}
         setSortType={setSortType}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        quantityFilter={quantityFilter}
+        setQuantityFilter={setQuantityFilter}
+        layoutMode={layoutMode}
+        setLayoutMode={setLayoutMode}
         displayMode={displayMode}
         setDisplayMode={setDisplayMode}
         inspectorFilter={inspectorFilter}
-        setInspectorFilter={setInspectorFilter}
+        handleInspectorFilterChange={handleInspectorFilterChange}
+        loadNFTs={loadNFTs}
+        additionalAddresses={additionalAddresses}
       />
 
       <div className="p-4">
         {layoutMode === "mosaic" ? (
-          <ViewMosaic nfts={nfts} openModal={openModal} />
+          <ViewMosaic
+            nfts={nfts}
+            openSymbols={openSymbols}
+            toggleSymbol={toggleSymbol}
+            layoutMode={layoutMode}
+            displayMode={displayMode}
+          />
         ) : (
           <ViewList
             nfts={nfts}
+            openSymbols={openSymbols}
             toggleSymbol={toggleSymbol}
+            layoutMode={layoutMode}
             displayMode={displayMode}
           />
         )}
       </div>
-
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-300">All NFTs</h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-white"
-              >
-                Close
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              {selectedCreatorNFTs.map((nft) => (
-                <div key={nft.id} className="bg-gray-700 rounded-lg p-4 w-full">
-                  <NFTImage
-                    src={
-                      nft.content.links?.image ||
-                      nft.content.metadata?.image ||
-                      nft.content.json_uri
-                    }
-                    alt={nft.content.metadata.name || "NFT Image"}
-                    layoutMode="mosaic"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
