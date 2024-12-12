@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 interface HeaderProps {
@@ -27,24 +29,78 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="sticky top-0 bg-gray-900 p-4 shadow-md z-10">
-      {/* Add your header content here, including buttons and filters */}
-      {/* Example: */}
       <div className="flex justify-between items-center">
         <div>
-          <button onClick={() => setViewType("created")}>Created</button>
-          <button onClick={() => setViewType("owned")}>Owned</button>
+          <button
+            onClick={() => setViewType("created")}
+            className={`px-4 py-2 ${
+              viewType === "created" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            Created
+          </button>
+          <button
+            onClick={() => setViewType("owned")}
+            className={`px-4 py-2 ${
+              viewType === "owned" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            Owned
+          </button>
         </div>
         <div>
-          <button onClick={() => setSortType("quantityDesc")}>Sort Desc</button>
-          <button onClick={() => setSortType("quantityAsc")}>Sort Asc</button>
+          <button
+            onClick={() => setSortType("quantityDesc")}
+            className={`px-4 py-2 ${
+              sortType === "quantityDesc" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            Sort Desc
+          </button>
+          <button
+            onClick={() => setSortType("quantityAsc")}
+            className={`px-4 py-2 ${
+              sortType === "quantityAsc" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            Sort Asc
+          </button>
         </div>
         <div>
-          <button onClick={() => setDisplayMode("grid")}>Grid</button>
-          <button onClick={() => setDisplayMode("data")}>Data</button>
+          <button
+            onClick={() => setDisplayMode("grid")}
+            className={`px-4 py-2 ${
+              displayMode === "grid" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            Grid
+          </button>
+          <button
+            onClick={() => setDisplayMode("data")}
+            className={`px-4 py-2 ${
+              displayMode === "data" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            Data
+          </button>
         </div>
         <div>
-          <button onClick={() => setInspectorFilter("clear")}>Clear</button>
-          <button onClick={() => setInspectorFilter("all")}>All</button>
+          <button
+            onClick={() => setInspectorFilter("clear")}
+            className={`px-4 py-2 ${
+              inspectorFilter === "clear" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            Clear
+          </button>
+          <button
+            onClick={() => setInspectorFilter("all")}
+            className={`px-4 py-2 ${
+              inspectorFilter === "all" ? "bg-blue-500" : "bg-gray-700"
+            } text-white rounded`}
+          >
+            All
+          </button>
           {/* Add more buttons as needed */}
         </div>
       </div>
