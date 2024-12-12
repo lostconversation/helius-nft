@@ -23,9 +23,9 @@ export default function Home() {
   >("quantityDesc");
   const [displayMode, setDisplayMode] = useState<"grid" | "data">("grid");
   const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
-  const [typeFilter, setTypeFilter] = useState<"all" | "drip" | "art" | "spam">(
-    "all"
-  );
+  const [typeFilter, setTypeFilter] = useState<
+    "all" | "drip" | "@" | "youtu" | "???" | "spam"
+  >("all");
   const [quantityFilter, setQuantityFilter] = useState<"all" | ">3" | "1">(
     "all"
   );
@@ -92,11 +92,17 @@ export default function Home() {
         // Type filter
         if (typeFilter !== "all") {
           const isDrip = creatorId.startsWith("DRIP:");
-          const isArt = creatorId.startsWith("@");
+          const isAtSymbol = creatorId.startsWith("@");
+          const isYoutu = creatorId.toLowerCase().startsWith("youtu");
+          const isLongName = creatorId.length >= 20;
+
           if (
             (typeFilter === "drip" && !isDrip) ||
-            (typeFilter === "art" && !isArt) ||
-            (typeFilter === "spam" && isDrip) // Assuming spam is the opposite of drip
+            (typeFilter === "@" && !isAtSymbol) ||
+            (typeFilter === "youtu" && !isYoutu) ||
+            (typeFilter === "???" && !isLongName) ||
+            (typeFilter === "spam" &&
+              (isDrip || isAtSymbol || isYoutu || isLongName))
           ) {
             return false;
           }
