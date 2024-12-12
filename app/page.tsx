@@ -492,21 +492,26 @@ export default function Home() {
           className={`${
             layoutMode === "mosaic"
               ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-              : "flex flex-col space-y-6"
+              : "flex flex-wrap gap-6"
           }`}
         >
           {Object.entries(nfts).map(([creator, creatorNFTs]) => {
-            console.log(
-              `Rendering NFTs for creator: ${creator}, count: ${creatorNFTs.length}`
-            );
             const isOpen = openSymbols.has(creator);
-            const displayNFTs = isOpen ? creatorNFTs : [];
+            const displayNFTs =
+              layoutMode === "mosaic" || isOpen
+                ? creatorNFTs
+                : [creatorNFTs[0]];
+            const isSingleNFT = creatorNFTs.length === 1;
 
             return (
               <div
                 key={creator}
                 className={`bg-gray-800 rounded-xl shadow-md p-6 ${
-                  isOpen && layoutMode === "mosaic"
+                  layoutMode === "list" && isSingleNFT
+                    ? "flex-grow-0"
+                    : "w-full"
+                } ${
+                  layoutMode === "mosaic"
                     ? `col-span-${Math.min(creatorNFTs.length, gridSize)}`
                     : ""
                 }`}
@@ -519,32 +524,69 @@ export default function Home() {
                 <div
                   className={`${
                     layoutMode === "mosaic"
-                      ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4"
+                      ? "grid grid-cols-1 gap-4 mt-4"
                       : "flex flex-wrap gap-4 mt-4"
                   }`}
                 >
-                  {displayNFTs.map((nft) => {
+                  {displayNFTs.map((nft, index) => {
                     const imageUrl =
                       nft.content.links?.image ||
                       nft.content.metadata?.image ||
                       nft.content.json_uri;
 
                     return (
-                      <div key={nft.id} className="bg-gray-700 rounded-lg p-4">
+                      <div
+                        key={nft.id}
+                        className={`bg-gray-700 rounded-lg p-4 ${
+                          layoutMode === "mosaic" ? "w-full" : "max-w-[300px]"
+                        }`}
+                      >
                         <NFTImage
                           src={imageUrl}
                           alt={nft.content.metadata.name || "NFT Image"}
-                          layoutMode={layoutMode} // Pass the layoutMode prop
+                          layoutMode={layoutMode}
                         />
                         {displayMode === "data" && (
-                          <div className="mt-2 text-gray-400">
-                            <p>Name: {nft.content.metadata.name}</p>
-                            <p>Symbol: {nft.content.metadata.symbol}</p>
-                            <p>Creator: {getCreatorIdentifier(nft)}</p>
-                            <p>
-                              Description: {nft.content.metadata.description}
+                          <div className="mt-2 text-gray-400 max-w-full">
+                            <p className="text-sm">
+                              <span className="font-semibold">Title:</span>{" "}
+                              {nft.content.metadata.name}
                             </p>
-                            {/* Add more metadata fields as needed */}
+                            <p className="text-sm">
+                              <span className="font-semibold">
+                                Description:
+                              </span>{" "}
+                              {nft.content.metadata.description}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">Attributes:</span>{" "}
+                              {JSON.stringify(nft.content.metadata.attributes)}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">Links:</span>{" "}
+                              {nft.content.links?.external_url}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">ID:</span>{" "}
+                              {nft.id}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">
+                                UpdateAuthority:
+                              </span>{" "}
+                              {nft.updateAuthority}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">isMutable:</span>{" "}
+                              {nft.mutable ? "Yes" : "No"}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">cNFT:</span>{" "}
+                              {nft.compression?.compressed ? "Yes" : "No"}
+                            </p>
+                            <button className="text-blue-500 hover:underline">
+                              Show raw data
+                            </button>
                           </div>
                         )}
                       </div>
