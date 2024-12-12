@@ -1,0 +1,88 @@
+import React from "react";
+import { NFTAsset } from "@/utils/helius";
+import { NFTImage } from "@/components/NFTImage";
+
+interface ViewListProps {
+  nfts: { [symbol: string]: NFTAsset[] };
+  toggleSymbol: (symbol: string) => void;
+  displayMode: "grid" | "data";
+}
+
+const ViewList: React.FC<ViewListProps> = ({
+  nfts,
+  toggleSymbol,
+  displayMode,
+}) => {
+  return (
+    <div className="flex flex-wrap gap-6">
+      {Object.entries(nfts).map(([creator, creatorNFTs]) => (
+        <div
+          key={creator}
+          className="bg-gray-800 rounded-xl shadow-md p-6 flex-grow-0"
+          onClick={() => toggleSymbol(creator)}
+        >
+          <h2 className="text-xl font-semibold text-gray-300">{creator}</h2>
+          <p className="text-gray-500">{creatorNFTs.length} NFTs</p>
+          <div className="flex flex-wrap gap-4 mt-4">
+            {creatorNFTs.map((nft) => (
+              <div
+                key={nft.id}
+                className="bg-gray-700 rounded-lg p-4 max-w-[300px]"
+              >
+                <NFTImage
+                  src={
+                    nft.content.links?.image ||
+                    nft.content.metadata?.image ||
+                    nft.content.json_uri
+                  }
+                  alt={nft.content.metadata.name || "NFT Image"}
+                  layoutMode="list"
+                />
+                {displayMode === "data" && (
+                  <div className="mt-2 text-gray-400 max-w-full">
+                    <p className="text-sm">
+                      <span className="font-semibold">Title:</span>{" "}
+                      {nft.content.metadata.name}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">Description:</span>{" "}
+                      {nft.content.metadata.description}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">Attributes:</span>{" "}
+                      {JSON.stringify(nft.content.metadata.attributes)}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">Links:</span>{" "}
+                      {nft.content.links?.external_url}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">ID:</span> {nft.id}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">UpdateAuthority:</span>{" "}
+                      {nft.updateAuthority}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">isMutable:</span>{" "}
+                      {nft.mutable ? "Yes" : "No"}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">cNFT:</span>{" "}
+                      {nft.compression?.compressed ? "Yes" : "No"}
+                    </p>
+                    <button className="text-blue-500 hover:underline">
+                      Show raw data
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ViewList;

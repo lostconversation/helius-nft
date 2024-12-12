@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { fetchNFTsByOwner, NFTAsset } from "@/utils/helius";
-import { NFTImage } from "@/components/NFTImage";
-
-interface GroupedNFTs {
-  [symbol: string]: NFTAsset[];
-}
+import Header from "@/components/Header";
+import ViewMosaic from "@/components/ViewMosaic";
+import ViewList from "@/components/ViewList";
 
 export default function Home() {
-  const [nfts, setNfts] = useState<GroupedNFTs>({});
+  const [nfts, setNfts] = useState<{ [symbol: string]: NFTAsset[] }>({});
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState(
     "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC"
@@ -31,11 +29,10 @@ export default function Home() {
     "clear" | "all" | "animations" | "immutable" | "cNFT"
   >("clear");
   const [searchTerm, setSearchTerm] = useState("");
-  const [additionalAddresses] = useState([
-    "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC",
-    "HQA4k1mrf8gDMd2GK1JYV2Sgm6kghMSsDTJ1zyAHGMQr",
-    "5hWu757purMHhha9THytqkNgv5Cqbim4ossod2PBUJwM",
-  ]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCreatorNFTs, setSelectedCreatorNFTs] = useState<NFTAsset[]>(
+    []
+  );
 
   const gridSize = 4; // Number of slots per row
 
@@ -116,14 +113,17 @@ export default function Home() {
 
       console.log("Filtered NFTs:", filteredNFTs);
 
-      const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
-        const creatorId = getCreatorIdentifier(nft);
-        if (!acc[creatorId]) {
-          acc[creatorId] = [];
-        }
-        acc[creatorId].push(nft);
-        return acc;
-      }, {});
+      const tempGrouped = filteredNFTs.reduce(
+        (acc: { [symbol: string]: NFTAsset[] }, nft) => {
+          const creatorId = getCreatorIdentifier(nft);
+          if (!acc[creatorId]) {
+            acc[creatorId] = [];
+          }
+          acc[creatorId].push(nft);
+          return acc;
+        },
+        {}
+      );
 
       console.log("Grouped NFTs by creator:", tempGrouped);
 
@@ -171,433 +171,71 @@ export default function Home() {
     });
   };
 
-  const handleInspectorFilterChange = (filter: string) => {
-    setInspectorFilter(
-      filter as "clear" | "all" | "animations" | "immutable" | "cNFT"
-    );
-    if (filter === "clear") {
-      setOpenSymbols(new Set());
-    } else if (filter === "all") {
-      setOpenSymbols(new Set(Object.keys(nfts)));
-    } else {
-      const filteredSymbols = new Set<string>();
-      Object.entries(nfts).forEach(([creator, creatorNFTs]) => {
-        const hasMatchingNFTs = creatorNFTs.some((nft) => {
-          switch (filter) {
-            case "animations":
-              return nft.content.links?.animation_url;
-            case "immutable":
-              return !nft.mutable;
-            case "cNFT":
-              return nft.compression?.compressed;
-            default:
-              return true;
-          }
-        });
-        if (hasMatchingNFTs) {
-          filteredSymbols.add(creator);
-        }
-      });
-      setOpenSymbols(filteredSymbols);
-    }
+  const openModal = (nfts: NFTAsset[]) => {
+    setSelectedCreatorNFTs(nfts);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedCreatorNFTs([]);
   };
 
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen">
-      <header className="sticky top-0 bg-gray-800 p-4 shadow-md z-10">
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-start">
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500">WALLET</span>
-              <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
-                <div className="flex space-x-0">
-                  <button
-                    onClick={() => setViewType("owned")}
-                    className={`px-3 py-1 rounded-l-lg ${
-                      viewType === "owned"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Owned
-                  </button>
-                  <button
-                    onClick={() => setViewType("created")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      viewType === "created"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Created
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="flex-grow px-3 py-1 bg-gray-600 text-gray-200 rounded-l-lg"
-                />
-                <button
-                  onClick={loadNFTs}
-                  className="px-3 py-1 bg-blue-500 text-white hover:bg-blue-400 rounded-r-lg"
-                >
-                  GO
-                </button>
-              </div>
-              <div className="flex space-x-2 text-xs text-gray-400 mt-1">
-                {additionalAddresses.map((addr, index) => (
-                  <span key={index} className="truncate">
-                    {addr}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500">ARTIST</span>
-              <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
-                <div className="flex space-x-0">
-                  <button
-                    onClick={() => setSortType("quantityDesc")}
-                    className={`px-3 py-1 rounded-l-lg ${
-                      sortType === "quantityDesc"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    # ↓
-                  </button>
-                  <button
-                    onClick={() => setSortType("quantityAsc")}
-                    className={`px-3 py-1 ${
-                      sortType === "quantityAsc"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    # ↑
-                  </button>
-                  <button
-                    onClick={() => setSortType("nameAsc")}
-                    className={`px-3 py-1 ${
-                      sortType === "nameAsc"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Abc
-                  </button>
-                  <button
-                    onClick={() => setSortType("nameDesc")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      sortType === "nameDesc"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Zyx
-                  </button>
-                </div>
-                <div className="flex space-x-0">
-                  <button
-                    onClick={() => setTypeFilter("all")}
-                    className={`px-3 py-1 rounded-l-lg ${
-                      typeFilter === "all"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={() => setTypeFilter("drip")}
-                    className={`px-3 py-1 ${
-                      typeFilter === "drip"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Drip
-                  </button>
-                  <button
-                    onClick={() => setTypeFilter("art")}
-                    className={`px-3 py-1 ${
-                      typeFilter === "art"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Art
-                  </button>
-                  <button
-                    onClick={() => setTypeFilter("spam")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      typeFilter === "spam"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Spam
-                  </button>
-                </div>
-                <div className="flex space-x-0">
-                  <button
-                    onClick={() => setQuantityFilter("all")}
-                    className={`px-3 py-1 rounded-l-lg ${
-                      quantityFilter === "all"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={() => setQuantityFilter(">3")}
-                    className={`px-3 py-1 ${
-                      quantityFilter === ">3"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    &gt; 3
-                  </button>
-                  <button
-                    onClick={() => setQuantityFilter("1")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      quantityFilter === "1"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    1
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-start items-start">
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500">VIEW</span>
-              <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
-                <div className="flex space-x-0">
-                  <button
-                    onClick={() => setLayoutMode("mosaic")}
-                    className={`px-3 py-1 rounded-l-lg ${
-                      layoutMode === "mosaic"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Mosaic
-                  </button>
-                  <button
-                    onClick={() => setLayoutMode("list")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      layoutMode === "list"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    List
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col space-y-1 ml-4">
-              <span className="text-xs text-gray-500">NFT</span>
-              <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
-                <div className="flex space-x-0">
-                  <button
-                    onClick={() => setDisplayMode("grid")}
-                    className={`px-3 py-1 rounded-l-lg ${
-                      displayMode === "grid"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Grid
-                  </button>
-                  <button
-                    onClick={() => setDisplayMode("data")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      displayMode === "data"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Data
-                  </button>
-                </div>
-                <div className="flex space-x-0">
-                  <button
-                    onClick={() => handleInspectorFilterChange("clear")}
-                    className={`px-3 py-1 rounded-l-lg ${
-                      inspectorFilter === "clear"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Clear
-                  </button>
-                  <button
-                    onClick={() => handleInspectorFilterChange("all")}
-                    className={`px-3 py-1 ${
-                      inspectorFilter === "all"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={() => handleInspectorFilterChange("animations")}
-                    className={`px-3 py-1 ${
-                      inspectorFilter === "animations"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Animations
-                  </button>
-                  <button
-                    onClick={() => handleInspectorFilterChange("immutable")}
-                    className={`px-3 py-1 ${
-                      inspectorFilter === "immutable"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Immutable
-                  </button>
-                  <button
-                    onClick={() => handleInspectorFilterChange("cNFT")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      inspectorFilter === "cNFT"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    cNFT
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        viewType={viewType}
+        setViewType={setViewType}
+        sortType={sortType}
+        setSortType={setSortType}
+        displayMode={displayMode}
+        setDisplayMode={setDisplayMode}
+        inspectorFilter={inspectorFilter}
+        setInspectorFilter={setInspectorFilter}
+      />
 
       <div className="p-4">
-        <div
-          className={`${
-            layoutMode === "mosaic"
-              ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-              : "flex flex-wrap gap-6"
-          }`}
-        >
-          {Object.entries(nfts).map(([creator, creatorNFTs]) => {
-            const isOpen = openSymbols.has(creator);
-            const displayNFTs =
-              layoutMode === "mosaic" || isOpen
-                ? creatorNFTs
-                : [creatorNFTs[0]];
-            const isSingleNFT = creatorNFTs.length === 1;
+        {layoutMode === "mosaic" ? (
+          <ViewMosaic nfts={nfts} openModal={openModal} />
+        ) : (
+          <ViewList
+            nfts={nfts}
+            toggleSymbol={toggleSymbol}
+            displayMode={displayMode}
+          />
+        )}
+      </div>
 
-            return (
-              <div
-                key={creator}
-                className={`bg-gray-800 rounded-xl shadow-md p-6 ${
-                  layoutMode === "list" && isSingleNFT
-                    ? "flex-grow-0"
-                    : "w-full"
-                } ${
-                  layoutMode === "mosaic"
-                    ? `col-span-${Math.min(creatorNFTs.length, gridSize)}`
-                    : ""
-                }`}
-                onClick={() => toggleSymbol(creator)}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-300">All NFTs</h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-white"
               >
-                <h2 className="text-xl font-semibold text-gray-300">
-                  {creator}
-                </h2>
-                <p className="text-gray-500">{creatorNFTs.length} NFTs</p>
-                <div
-                  className={`${
-                    layoutMode === "mosaic"
-                      ? "grid grid-cols-1 gap-4 mt-4"
-                      : "flex flex-wrap gap-4 mt-4"
-                  }`}
-                >
-                  {displayNFTs.map((nft, index) => {
-                    const imageUrl =
+                Close
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              {selectedCreatorNFTs.map((nft) => (
+                <div key={nft.id} className="bg-gray-700 rounded-lg p-4 w-full">
+                  <NFTImage
+                    src={
                       nft.content.links?.image ||
                       nft.content.metadata?.image ||
-                      nft.content.json_uri;
-
-                    return (
-                      <div
-                        key={nft.id}
-                        className={`bg-gray-700 rounded-lg p-4 ${
-                          layoutMode === "mosaic" ? "w-full" : "max-w-[300px]"
-                        }`}
-                      >
-                        <NFTImage
-                          src={imageUrl}
-                          alt={nft.content.metadata.name || "NFT Image"}
-                          layoutMode={layoutMode}
-                        />
-                        {displayMode === "data" && (
-                          <div className="mt-2 text-gray-400 max-w-full">
-                            <p className="text-sm">
-                              <span className="font-semibold">Title:</span>{" "}
-                              {nft.content.metadata.name}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">
-                                Description:
-                              </span>{" "}
-                              {nft.content.metadata.description}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">Attributes:</span>{" "}
-                              {JSON.stringify(nft.content.metadata.attributes)}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">Links:</span>{" "}
-                              {nft.content.links?.external_url}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">ID:</span>{" "}
-                              {nft.id}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">
-                                UpdateAuthority:
-                              </span>{" "}
-                              {nft.updateAuthority}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">isMutable:</span>{" "}
-                              {nft.mutable ? "Yes" : "No"}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">cNFT:</span>{" "}
-                              {nft.compression?.compressed ? "Yes" : "No"}
-                            </p>
-                            <button className="text-blue-500 hover:underline">
-                              Show raw data
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                      nft.content.json_uri
+                    }
+                    alt={nft.content.metadata.name || "NFT Image"}
+                    layoutMode="mosaic"
+                  />
                 </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
