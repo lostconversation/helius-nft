@@ -48,23 +48,18 @@ export default function Home() {
       dripHausUrl === "https://drip.haus";
     const dripArtist = isDripProject ? dripHausUrl?.split("/").pop() : null;
     if (isDripProject) return `DRIP: ${dripArtist || "drip.haus"}`;
-
     if (dripHausUrl) {
       return dripHausUrl
         .replace(/^https?:\/\//, "")
         .replace(/^www\./, "")
         .replace(/\/$/, "");
     }
-
     const artistAttribute = nft.content.metadata.attributes?.find(
       (attr) => (attr.trait_type || attr.traitType)?.toLowerCase() === "artist"
     );
     if (artistAttribute?.value) return artistAttribute.value;
-
     if (nft.compression?.creator_hash) return nft.compression.creator_hash;
-
     if (nft.content.metadata.symbol) return nft.content.metadata.symbol;
-
     return nft.authorities?.[0]?.address || "Unknown";
   };
 
@@ -77,12 +72,10 @@ export default function Home() {
 
   const loadNFTs = async () => {
     if (!address) return;
-
     setLoading(true);
     try {
       console.log("Fetching NFTs for address:", address);
       const fetchedNFTs = await fetchNFTsByOwner(address, viewType);
-
       console.log("Fetched NFTs:", fetchedNFTs);
 
       // Apply type and quantity filters
@@ -232,7 +225,6 @@ export default function Home() {
         loadNFTs={loadNFTs}
         additionalAddresses={additionalAddresses}
       />
-
       <div className="p-4">
         {layoutMode === "mosaic" ? (
           <ViewMosaic
