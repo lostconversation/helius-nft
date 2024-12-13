@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchNFTsByOwner, NFTAsset } from "@/utils/helius";
+import { loadNFTs } from "@/utils/loadNFTs";
 import Header from "@/components/Header";
 import ViewMosaic from "@/components/ViewMosaic";
 import ViewList from "@/components/ViewList";
+import LoadingPopup from "@/components/LoadingPopup";
+import { NFTAsset } from "@/utils/helius";
 
 interface GroupedNFTs {
   [symbol: string]: NFTAsset[];
@@ -13,6 +15,7 @@ interface GroupedNFTs {
 export default function Home() {
   const [nfts, setNfts] = useState<GroupedNFTs>({});
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [address, setAddress] = useState(
     "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC"
   );
@@ -25,7 +28,7 @@ export default function Home() {
   const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
   const [typeFilter, setTypeFilter] = useState<
     "all" | "drip" | "@" | "youtu" | "???" | "spam"
-  >("all");
+  >("youtu"); // Start with "YouTu"
   const [quantityFilter, setQuantityFilter] = useState<"all" | ">3" | "1">(
     "all"
   );
@@ -39,125 +42,78 @@ export default function Home() {
     "5hWu757purMHhha9THytqkNgv5Cqbim4ossod2PBUJwM",
   ]);
 
-  const gridSize = 4; // Number of slots per row
-
-  const getCreatorIdentifier = (nft: NFTAsset): string => {
-    const dripHausUrl = nft.content.links?.external_url;
-    const isDripProject =
-      dripHausUrl?.startsWith("https://drip.haus/") ||
-      dripHausUrl === "https://drip.haus";
-    const dripArtist = isDripProject ? dripHausUrl?.split("/").pop() : null;
-    if (isDripProject) return `DRIP: ${dripArtist || "drip.haus"}`;
-    if (dripHausUrl) {
-      return dripHausUrl
-        .replace(/^https?:\/\//, "")
-        .replace(/^www\./, "")
-        .replace(/\/$/, "");
-    }
-    const artistAttribute = nft.content.metadata.attributes?.find(
-      (attr) => (attr.trait_type || attr.traitType)?.toLowerCase() === "artist"
-    );
-    if (artistAttribute?.value) return artistAttribute.value;
-    if (nft.compression?.creator_hash) return nft.compression.creator_hash;
-    if (nft.content.metadata.symbol) return nft.content.metadata.symbol;
-    return nft.authorities?.[0]?.address || "Unknown";
-  };
-
-  const handleSortTypeChange = (
-    type: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
-  ) => {
-    console.log(`Changing sort type to: ${type}`);
-    setSortType(type);
-  };
-
-  const loadNFTs = async () => {
-    if (!address) return;
-    setLoading(true);
-    try {
-      console.log("Fetching NFTs for address:", address);
-      const fetchedNFTs = await fetchNFTsByOwner(address, viewType);
-      console.log("Fetched NFTs:", fetchedNFTs);
-
-      // Apply type and quantity filters
-      const filteredNFTs = fetchedNFTs.filter((nft) => {
-        const creatorId = getCreatorIdentifier(nft);
-
-        // Type filter
-        if (typeFilter !== "all") {
-          const isDrip = creatorId.startsWith("DRIP:");
-          const isAtSymbol = creatorId.startsWith("@");
-          const isYoutu = creatorId.toLowerCase().startsWith("youtu");
-          const isLongName = creatorId.length >= 20;
-
-          if (
-            (typeFilter === "drip" && !isDrip) ||
-            (typeFilter === "@" && !isAtSymbol) ||
-            (typeFilter === "youtu" && !isYoutu) ||
-            (typeFilter === "???" && !isLongName) ||
-            (typeFilter === "spam" &&
-              (isDrip || isAtSymbol || isYoutu || isLongName))
-          ) {
-            return false;
-          }
-        }
-
-        // Quantity filter
-        const creatorNFTs = fetchedNFTs.filter(
-          (n) => getCreatorIdentifier(n) === creatorId
-        );
-        if (quantityFilter === ">3" && creatorNFTs.length <= 3) {
-          return false;
-        }
-        if (quantityFilter === "1" && creatorNFTs.length !== 1) {
-          return false;
-        }
-
-        return true;
-      });
-
-      console.log("Filtered NFTs:", filteredNFTs);
-
-      const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
-        const creatorId = getCreatorIdentifier(nft);
-        if (!acc[creatorId]) {
-          acc[creatorId] = [];
-        }
-        acc[creatorId].push(nft);
-        return acc;
-      }, {});
-
-      console.log("Grouped NFTs by creator:", tempGrouped);
-
-      // Apply sorting based on sortType
-      const sortedGrouped = Object.entries(tempGrouped).sort(
-        ([aKey, aValue], [bKey, bValue]) => {
-          switch (sortType) {
-            case "quantityDesc":
-              return bValue.length - aValue.length;
-            case "quantityAsc":
-              return aValue.length - bValue.length;
-            case "nameAsc":
-              return aKey.localeCompare(bKey);
-            case "nameDesc":
-              return bKey.localeCompare(aKey);
-            default:
-              return 0;
-          }
-        }
+  const handleInspectorFilterChange = (filter: string) => {
+    if (filter !== inspectorFilter) {
+      setInspectorFilter(
+        filter as "clear" | "all" | "animations" | "immutable" | "cNFT"
       );
-
-      console.log("Sorted grouped NFTs:", sortedGrouped);
-
-      setNfts(Object.fromEntries(sortedGrouped));
-    } catch (error) {
-      console.error("Error loading NFTs:", error);
-    } finally {
-      setLoading(false);
+      if (filter === "clear") {
+        setOpenSymbols(new Set());
+      } else if (filter === "all") {
+        setOpenSymbols(new Set(Object.keys(nfts)));
+      } else {
+        const filteredSymbols = new Set<string>();
+        Object.entries(nfts).forEach(([creator, creatorNFTs]) => {
+          const hasMatchingNFTs = creatorNFTs.some((nft) => {
+            switch (filter) {
+              case "animations":
+                return nft.content.links?.animation_url;
+              case "immutable":
+                return !nft.mutable;
+              case "cNFT":
+                return nft.compression?.compressed;
+              default:
+                return true;
+            }
+          });
+          if (hasMatchingNFTs) {
+            filteredSymbols.add(creator);
+          }
+        });
+        setOpenSymbols(filteredSymbols);
+      }
     }
   };
 
   useEffect(() => {
-    loadNFTs();
+    // Register the service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js").then(
+          (registration) => {
+            console.log(
+              "Service Worker registered with scope:",
+              registration.scope
+            );
+          },
+          (error) => {
+            console.error("Service Worker registration failed:", error);
+          }
+        );
+      });
+    }
+    console.log("Current typeFilter:", typeFilter); // Debugging line
+    // Fetch NFTs
+    const fetchNFTs = async () => {
+      setLoading(true);
+      try {
+        const groupedNFTs = await loadNFTs(
+          address,
+          viewType,
+          sortType,
+          typeFilter,
+          quantityFilter,
+          setProgress
+        );
+        setNfts(groupedNFTs);
+      } catch (error) {
+        console.error("Error loading NFTs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNFTs();
   }, [address, viewType, sortType, typeFilter, quantityFilter]);
 
   const toggleSymbol = (symbol: string) => {
@@ -172,39 +128,9 @@ export default function Home() {
     });
   };
 
-  const handleInspectorFilterChange = (filter: string) => {
-    setInspectorFilter(
-      filter as "clear" | "all" | "animations" | "immutable" | "cNFT"
-    );
-    if (filter === "clear") {
-      setOpenSymbols(new Set());
-    } else if (filter === "all") {
-      setOpenSymbols(new Set(Object.keys(nfts)));
-    } else {
-      const filteredSymbols = new Set<string>();
-      Object.entries(nfts).forEach(([creator, creatorNFTs]) => {
-        const hasMatchingNFTs = creatorNFTs.some((nft) => {
-          switch (filter) {
-            case "animations":
-              return nft.content.links?.animation_url;
-            case "immutable":
-              return !nft.mutable;
-            case "cNFT":
-              return nft.compression?.compressed;
-            default:
-              return true;
-          }
-        });
-        if (hasMatchingNFTs) {
-          filteredSymbols.add(creator);
-        }
-      });
-      setOpenSymbols(filteredSymbols);
-    }
-  };
-
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen">
+      {loading && <LoadingPopup progress={progress} />}
       <Header
         address={address}
         setAddress={setAddress}
@@ -222,7 +148,6 @@ export default function Home() {
         setDisplayMode={setDisplayMode}
         inspectorFilter={inspectorFilter}
         handleInspectorFilterChange={handleInspectorFilterChange}
-        loadNFTs={loadNFTs}
         additionalAddresses={additionalAddresses}
       />
       <div className="p-4">
