@@ -14,7 +14,7 @@ export const loadNFTs = async (
   quantityFilter: "all" | ">3" | "1",
   setProgress: (progress: number) => void
 ): Promise<GroupedNFTs> => {
-  const cacheKey = `nfts_cache_${address}_${viewType}_${typeFilter}`;
+  const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}_${typeFilter}`;
 
   // Check if cached data exists
   const cachedData = localStorage.getItem(cacheKey);
@@ -72,11 +72,6 @@ export const loadNFTs = async (
   });
 
   console.log("Filtered NFTs:", filteredNFTs);
-
-  // Log the sortType and inspectorFilter
-  console.log("Applying sortType:", sortType);
-  console.log("Applying typeFilter:", typeFilter);
-
   const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
     const creatorId = getCreatorIdentifier(nft);
     if (!acc[creatorId]) {
@@ -107,7 +102,6 @@ export const loadNFTs = async (
   );
 
   console.log("Sorted grouped NFTs:", sortedGrouped);
-
   const groupedNFTs = Object.fromEntries(sortedGrouped);
 
   // Cache the result

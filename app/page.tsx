@@ -28,7 +28,7 @@ export default function Home() {
   const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
   const [typeFilter, setTypeFilter] = useState<
     "all" | "drip" | "@" | "youtu" | "???" | "spam"
-  >("youtu"); // Start with "YouTu"
+  >("youtu");
   const [quantityFilter, setQuantityFilter] = useState<"all" | ">3" | "1">(
     "all"
   );
@@ -76,27 +76,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Register the service worker
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/service-worker.js").then(
-          (registration) => {
-            console.log(
-              "Service Worker registered with scope:",
-              registration.scope
-            );
-          },
-          (error) => {
-            console.error("Service Worker registration failed:", error);
-          }
-        );
-      });
-    }
-
-    // Fetch NFTs
     const fetchNFTs = async () => {
-      console.log("Fetching NFTs with sortType:", sortType);
-      console.log("Fetching NFTs with typeFilter:", typeFilter);
       setLoading(true);
       try {
         const groupedNFTs = await loadNFTs(
@@ -107,7 +87,24 @@ export default function Home() {
           quantityFilter,
           setProgress
         );
-        setNfts(groupedNFTs);
+
+        // Sort the grouped NFTs based on the sortType
+        const sortedGroupedNFTs = Object.entries(groupedNFTs).sort(
+          ([creatorA, nftsA], [creatorB, nftsB]) => {
+            if (sortType === "quantityDesc") {
+              return nftsB.length - nftsA.length;
+            } else if (sortType === "quantityAsc") {
+              return nftsA.length - nftsB.length;
+            } else if (sortType === "nameAsc") {
+              return creatorA.localeCompare(creatorB);
+            } else if (sortType === "nameDesc") {
+              return creatorB.localeCompare(creatorA);
+            }
+            return 0;
+          }
+        );
+
+        setNfts(Object.fromEntries(sortedGroupedNFTs));
       } catch (error) {
         console.error("Error loading NFTs:", error);
       } finally {

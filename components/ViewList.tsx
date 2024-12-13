@@ -33,60 +33,112 @@ const ViewList: React.FC<ViewListProps> = ({
             <h2 className="text-xl font-semibold text-gray-300">{creator}</h2>
             <p className="text-gray-500">{creatorNFTs.length} NFTs</p>
             <div className="flex flex-wrap gap-4 mt-4">
-              {displayNFTs.map((nft) => (
-                <div
-                  key={nft.id}
-                  className="bg-gray-700 rounded-lg p-4 max-w-[300px]"
-                >
-                  <NFTImage
-                    src={
-                      nft.content.links?.image ||
-                      nft.content.metadata?.image ||
-                      nft.content.json_uri
-                    }
-                    alt={nft.content.metadata.name || "NFT Image"}
-                    layoutMode={layoutMode}
-                  />
-                  {displayMode === "data" && (
-                    <div className="mt-2 text-gray-400 max-w-full">
-                      <p className="text-sm">
-                        <span className="font-semibold">Title:</span>{" "}
-                        {nft.content.metadata.name}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-semibold">Description:</span>{" "}
-                        {nft.content.metadata.description}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-semibold">Attributes:</span>{" "}
-                        {JSON.stringify(nft.content.metadata.attributes)}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-semibold">Links:</span>{" "}
-                        {nft.content.links?.external_url}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-semibold">ID:</span> {nft.id}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-semibold">UpdateAuthority:</span>{" "}
-                        {nft.updateAuthority}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-semibold">isMutable:</span>{" "}
-                        {nft.mutable ? "Yes" : "No"}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-semibold">cNFT:</span>{" "}
-                        {nft.compression?.compressed ? "Yes" : "No"}
-                      </p>
-                      <button className="text-blue-500 hover:underline">
-                        Show raw data
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+              {displayNFTs.map((nft) => {
+                const imageUrl =
+                  nft.content.links?.image ||
+                  nft.content.metadata?.image ||
+                  nft.content.json_uri;
+
+                const solscanUrl = `https://solscan.io/token/${nft.id}`;
+                const dripHausUrl = nft.content.links?.external_url;
+                const animationUrl = nft.content.links?.animation_url;
+                const attributes = nft.content.metadata.attributes || [];
+
+                return (
+                  <div
+                    key={nft.id}
+                    className="bg-gray-700 rounded-lg p-4 max-w-[300px]"
+                  >
+                    <NFTImage
+                      src={imageUrl}
+                      alt={nft.content.metadata.name || "NFT Image"}
+                      layoutMode={layoutMode}
+                    />
+                    {displayMode === "data" && (
+                      <div className="mt-2 text-gray-400 max-w-full">
+                        <h2 className="text-sm font-semibold">
+                          {nft.content.metadata.name}
+                        </h2>
+                        <p className="text-sm">
+                          <span className="font-semibold">Description:</span>{" "}
+                          {nft.content.metadata.description}
+                        </p>
+                        {attributes.length > 0 && (
+                          <div className="text-sm">
+                            <span className="font-semibold">Attributes:</span>
+                            <ul className="pl-4">
+                              {attributes.map((attr, index) => (
+                                <li key={index}>
+                                  {attr?.trait_type || attr?.traitType ? (
+                                    <span>
+                                      <span className="font-medium">
+                                        {attr.trait_type || attr.traitType}:
+                                      </span>{" "}
+                                      {attr.value}
+                                    </span>
+                                  ) : (
+                                    <span className="font-medium">
+                                      Unknown Trait: {attr.value}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        <p className="text-sm">
+                          <span className="font-semibold">Links:</span>{" "}
+                          {dripHausUrl && (
+                            <a
+                              href={dripHausUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-700 underline"
+                            >
+                              {dripHausUrl}
+                            </a>
+                          )}
+                          <a
+                            href={solscanUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700 underline"
+                          >
+                            View on Solscan
+                          </a>
+                          {animationUrl && (
+                            <a
+                              href={animationUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-700 underline"
+                            >
+                              View Animation
+                            </a>
+                          )}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">ID:</span> {nft.id}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">
+                            Update Authority:
+                          </span>{" "}
+                          {nft.updateAuthority}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">isMutable:</span>{" "}
+                          {nft.mutable ? "Yes" : "No"}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">cNFT:</span>{" "}
+                          {nft.compression?.compressed ? "Yes" : "No"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
