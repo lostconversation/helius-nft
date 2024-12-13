@@ -92,9 +92,11 @@ export default function Home() {
         );
       });
     }
-    console.log("Current typeFilter:", typeFilter); // Debugging line
+
     // Fetch NFTs
     const fetchNFTs = async () => {
+      console.log("Fetching NFTs with sortType:", sortType);
+      console.log("Fetching NFTs with typeFilter:", typeFilter);
       setLoading(true);
       try {
         const groupedNFTs = await loadNFTs(

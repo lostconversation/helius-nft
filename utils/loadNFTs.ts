@@ -23,11 +23,6 @@ export const loadNFTs = async (
     return JSON.parse(cachedData);
   }
 
-  if (cachedData) {
-    console.log("Using cached NFTs data");
-    return JSON.parse(cachedData);
-  }
-
   if (!address) return {};
   console.log("Fetching NFTs for address:", address);
   const fetchedNFTs = await fetchNFTsByOwner(address, viewType);
@@ -77,6 +72,10 @@ export const loadNFTs = async (
   });
 
   console.log("Filtered NFTs:", filteredNFTs);
+
+  // Log the sortType and inspectorFilter
+  console.log("Applying sortType:", sortType);
+  console.log("Applying typeFilter:", typeFilter);
 
   const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
     const creatorId = getCreatorIdentifier(nft);
