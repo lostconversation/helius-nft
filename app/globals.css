@@ -42,3 +42,9 @@ body {
   height: 100%;
   object-fit: cover; /* Ensures the image covers the container while maintaining aspect ratio */
 }
+.title-overflow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+}
