@@ -127,6 +127,36 @@ export default function Home() {
     });
   };
 
+  const filterNFTsByInspector = (
+    nfts: GroupedNFTs,
+    filter: string
+  ): GroupedNFTs => {
+    if (filter === "clear" || filter === "all") {
+      return nfts;
+    }
+
+    const filteredNFTs: GroupedNFTs = {};
+
+    Object.entries(nfts).forEach(([creator, creatorNFTs]) => {
+      const filtered = creatorNFTs.filter((nft) => {
+        if (filter === "animations") {
+          // Check for valid animation URL in both places it might appear
+          return (
+            nft.content.links?.animation_url ||
+            nft.content.metadata?.animation_url
+          );
+        }
+        return true;
+      });
+
+      if (filtered.length > 0) {
+        filteredNFTs[creator] = filtered;
+      }
+    });
+
+    return filteredNFTs;
+  };
+
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen">
       {loading && <LoadingPopup progress={progress} />}
