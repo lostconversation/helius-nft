@@ -20,43 +20,27 @@ const NFTModal: React.FC<NFTModalProps> = ({
 }) => {
   const [isShowing, setIsShowing] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<"img" | "data">("img");
 
   useEffect(() => {
     if (isOpen) {
+      // Disable body scroll when modal is open
+      document.body.style.overflow = "hidden";
       requestAnimationFrame(() => {
         setIsShowing(true);
       });
     }
-  }, [isOpen]);
-
-  // Restore ESC key functionality
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        handleClose();
-      }
+    return () => {
+      // Re-enable body scroll when modal is closed
+      document.body.style.overflow = "unset";
     };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
+  }, [isOpen]);
 
   const handleClose = () => {
     setIsShowing(false);
-    setTimeout(onClose, 300);
+    setTimeout(onClose, 400); // Increased animation duration
   };
 
   if (!isOpen) return null;
-
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % nfts.length);
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? nfts.length - 1 : prevIndex - 1
-    );
-  };
 
   const getImageSrc = (index: number) => {
     return (
@@ -96,10 +80,10 @@ const NFTModal: React.FC<NFTModalProps> = ({
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 w-full flex justify-center px-8">
-            {viewMode === "img" ? (
-              // Image view
-              <div className="w-full h-[65vh] flex justify-center items-center">
+          <div className="flex-1 w-full relative">
+            {/* Centered Image and Title */}
+            <div className="w-full flex flex-col items-center">
+              <div className="h-[65vh] flex justify-center items-center">
                 <Image
                   src={getImageSrc(currentIndex)}
                   alt={nfts[currentIndex].content.metadata.name || "NFT Image"}
@@ -110,117 +94,78 @@ const NFTModal: React.FC<NFTModalProps> = ({
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-            ) : (
-              // Data view
-              <div className="w-full flex gap-8">
-                {/* Left side - Image */}
-                <div className="w-1/2 h-[65vh] flex justify-center items-center">
-                  <Image
-                    src={getImageSrc(currentIndex)}
-                    alt={
-                      nfts[currentIndex].content.metadata.name || "NFT Image"
-                    }
-                    className="w-auto h-full object-contain cursor-default"
-                    width={1920}
-                    height={1080}
-                    unoptimized={true}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
+              {/* Title under image */}
+              <div
+                className="text-center text-white mt-8"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-2xl font-bold">
+                  {nfts[currentIndex].content.metadata.name}
+                </h3>
+              </div>
+            </div>
 
-                {/* Right side - Metadata */}
-                <div
-                  className="w-1/2 h-[65vh] bg-gray-800/50 rounded-xl p-6 overflow-y-auto"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="space-y-4 text-gray-400">
-                    <p className="text-sm">
-                      <span className="font-semibold">Title:</span>{" "}
-                      {nfts[currentIndex].content.metadata.name}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Description:</span>{" "}
-                      {nfts[currentIndex].content.metadata.description}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Attributes:</span>{" "}
+            {/* Floating metadata sidebar */}
+            <div
+              className="absolute top-0 right-8 w-72 h-[65vh] bg-gray-800/30 rounded-xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top half - Formatted metadata */}
+              <div className="h-1/2 p-4 overflow-y-auto border-b border-gray-700/50">
+                <div className="space-y-4 text-gray-400">
+                  <p className="text-sm">
+                    <span className="font-semibold">Description:</span>
+                    <br />
+                    {nfts[currentIndex].content.metadata.description}
+                  </p>
+                  <div>
+                    <span className="font-semibold">Attributes:</span>
+                    <br />
+                    <span className="text-xs">
                       {JSON.stringify(
-                        nfts[currentIndex].content.metadata.attributes
+                        nfts[currentIndex].content.metadata.attributes,
+                        null,
+                        2
                       )}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Links:</span>{" "}
-                      {nfts[currentIndex].content.links?.external_url}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">ID:</span>{" "}
-                      {nfts[currentIndex].id}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">UpdateAuthority:</span>{" "}
-                      {nfts[currentIndex].updateAuthority}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">isMutable:</span>{" "}
-                      {nfts[currentIndex].mutable ? "Yes" : "No"}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">cNFT:</span>{" "}
-                      {nfts[currentIndex].compression?.compressed
-                        ? "Yes"
-                        : "No"}
-                    </p>
+                    </span>
                   </div>
+                  <p className="text-sm">
+                    <span className="font-semibold">Links:</span>
+                    <br />
+                    {nfts[currentIndex].content.links?.external_url}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-semibold">ID:</span>
+                    <br />
+                    {nfts[currentIndex].id}
+                  </p>
                 </div>
               </div>
-            )}
+
+              {/* Bottom half - Raw metadata */}
+              <div className="h-1/2 p-4 overflow-y-auto bg-gray-800/40">
+                <pre className="text-xs text-gray-400 font-mono whitespace-pre-wrap">
+                  {JSON.stringify(nfts[currentIndex].content.metadata, null, 2)}
+                </pre>
+              </div>
+            </div>
           </div>
 
-          {/* Controls at top right */}
-          <div className="absolute top-4 right-4 flex items-center gap-4 z-50">
-            <div className="bg-gray-800 rounded-full flex">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewMode("img");
-                }}
-                className={`px-4 py-1 rounded-full transition-colors ${
-                  viewMode === "img"
-                    ? "bg-blue-500 text-white"
-                    : "text-gray-300 hover:text-white"
-                }`}
-              >
-                img
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewMode("data");
-                }}
-                className={`px-4 py-1 rounded-full transition-colors ${
-                  viewMode === "data"
-                    ? "bg-blue-500 text-white"
-                    : "text-gray-300 hover:text-white"
-                }`}
-              >
-                data
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }}
-              className="text-white hover:text-gray-300 text-6xl"
-            >
-              ×
-            </button>
-          </div>
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+            }}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 text-6xl z-50"
+          >
+            ×
+          </button>
 
           {/* Thumbnails at bottom */}
           {nfts.length > 1 && (
-            <div className="w-full flex justify-center mb-8 mt-4">
+            <div className="w-full flex justify-center mb-8">
               <div
                 className="flex gap-4 overflow-x-auto px-4 py-2 max-w-[80vw]"
                 onClick={(e) => e.stopPropagation()}
