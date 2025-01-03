@@ -23,6 +23,8 @@ interface HeaderProps {
   handleInspectorFilterChange: (filter: string) => void;
   loadNFTs: () => void;
   additionalAddresses: string[];
+  viewMode: "1" | "2" | "3" | "4";
+  setViewMode: (viewMode: "1" | "2" | "3" | "4") => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -44,6 +46,8 @@ const Header: React.FC<HeaderProps> = ({
   handleInspectorFilterChange,
   loadNFTs,
   additionalAddresses,
+  viewMode,
+  setViewMode,
 }) => {
   return (
     <header className="sticky top-0 bg-gray-800 p-4 shadow-md z-10">
@@ -215,29 +219,47 @@ const Header: React.FC<HeaderProps> = ({
               {/* VIEW Section */}
               <div className="flex flex-col space-y-1">
                 <span className="text-xs text-gray-500">VIEW</span>
-                <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
-                  <div className="flex space-x-0">
-                    <button
-                      onClick={() => setLayoutMode("mosaic")}
-                      className={`px-3 py-1 rounded-l-lg ${
-                        layoutMode === "mosaic"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      Mosaic
-                    </button>
-                    <button
-                      onClick={() => setLayoutMode("list")}
-                      className={`px-3 py-1 rounded-r-lg ${
-                        layoutMode === "list"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      List
-                    </button>
-                  </div>
+                <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+                  <button
+                    onClick={() => setViewMode("1")}
+                    className={`px-3 py-1 rounded-l-lg ${
+                      viewMode === "1"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    1
+                  </button>
+                  <button
+                    onClick={() => setViewMode("2")}
+                    className={`px-3 py-1 ${
+                      viewMode === "2"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    2
+                  </button>
+                  <button
+                    onClick={() => setViewMode("3")}
+                    className={`px-3 py-1 ${
+                      viewMode === "3"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    3
+                  </button>
+                  <button
+                    onClick={() => setViewMode("4")}
+                    className={`px-3 py-1 rounded-r-lg ${
+                      viewMode === "4"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    4
+                  </button>
                 </div>
               </div>
 

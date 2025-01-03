@@ -7,6 +7,11 @@ import ViewMosaic from "@/components/ViewMosaic";
 import ViewList from "@/components/ViewList";
 import LoadingPopup from "@/components/LoadingPopup";
 import { NFTAsset } from "@/utils/helius";
+import View1 from "@/components/View1";
+import View2 from "@/components/View2";
+import View3 from "@/components/View3";
+import View4 from "@/components/View4";
+import { ViewMode } from "@/types/index";
 
 interface GroupedNFTs {
   [symbol: string]: NFTAsset[];
@@ -41,6 +46,7 @@ export default function Home() {
     "HQA4k1mrf8gDMd2GK1JYV2Sgm6kghMSsDTJ1zyAHGMQr",
     "5hWu757purMHhha9THytqkNgv5Cqbim4ossod2PBUJwM",
   ]);
+  const [viewMode, setViewMode] = useState<ViewMode>("1");
 
   const handleInspectorFilterChange = (filter: string) => {
     if (filter !== inspectorFilter) {
@@ -178,23 +184,39 @@ export default function Home() {
         inspectorFilter={inspectorFilter}
         handleInspectorFilterChange={handleInspectorFilterChange}
         additionalAddresses={additionalAddresses}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
       />
       <div className="p-4">
-        {layoutMode === "mosaic" ? (
-          <ViewMosaic
+        {viewMode === "1" && (
+          <View1
             nfts={nfts}
             openSymbols={openSymbols}
             toggleSymbol={toggleSymbol}
-            layoutMode={layoutMode}
-            displayMode={displayMode}
           />
-        ) : (
-          <ViewList
+        )}
+
+        {viewMode === "2" && (
+          <View2
             nfts={nfts}
             openSymbols={openSymbols}
             toggleSymbol={toggleSymbol}
-            layoutMode={layoutMode}
-            displayMode={displayMode}
+          />
+        )}
+
+        {viewMode === "3" && (
+          <View3
+            nfts={nfts}
+            openSymbols={openSymbols}
+            toggleSymbol={toggleSymbol}
+          />
+        )}
+
+        {viewMode === "4" && (
+          <View4
+            nfts={nfts}
+            openSymbols={openSymbols}
+            toggleSymbol={toggleSymbol}
           />
         )}
       </div>

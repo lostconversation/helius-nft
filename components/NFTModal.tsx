@@ -10,6 +10,7 @@ interface NFTModalProps {
   nfts: NFTAsset[];
   creator: string;
   initialPosition: { x: number; y: number; width: number; height: number };
+  initialIndex?: number;
 }
 
 const NFTModal: React.FC<NFTModalProps> = ({
@@ -18,27 +19,39 @@ const NFTModal: React.FC<NFTModalProps> = ({
   nfts,
   creator,
   initialPosition,
+  initialIndex = 0,
 }) => {
   const [isShowing, setIsShowing] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  useEffect(() => {
+    setCurrentIndex(initialIndex);
+  }, [initialIndex]);
 
   useEffect(() => {
     if (isOpen) {
-      // Disable body scroll when modal is open
       document.body.style.overflow = "hidden";
       requestAnimationFrame(() => {
         setIsShowing(true);
       });
+
+      const handleEsc = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          handleClose();
+        }
+      };
+      window.addEventListener("keydown", handleEsc);
+
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleEsc);
+      };
     }
-    return () => {
-      // Re-enable body scroll when modal is closed
-      document.body.style.overflow = "unset";
-    };
   }, [isOpen]);
 
   const handleClose = () => {
     setIsShowing(false);
-    setTimeout(onClose, 400); // Increased animation duration
+    setTimeout(onClose, 800);
   };
 
   if (!isOpen) return null;
@@ -57,6 +70,9 @@ const NFTModal: React.FC<NFTModalProps> = ({
         className={`absolute inset-0 bg-black modal-background ${
           isShowing ? "show" : ""
         }`}
+        style={{
+          transition: "opacity 0.8s ease-in-out",
+        }}
       />
       <div
         className={`absolute rounded-xl bg-gray-900/80 modal-expand ${
@@ -68,6 +84,7 @@ const NFTModal: React.FC<NFTModalProps> = ({
           width: isShowing ? "100%" : initialPosition.width,
           height: isShowing ? "100%" : initialPosition.height,
           transform: isShowing ? "none" : "translate(0, 0)",
+          transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
         <div

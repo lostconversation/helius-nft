@@ -2,22 +2,15 @@ import React, { useState } from "react";
 import { NFTAsset } from "@/utils/helius";
 import { NFTImage } from "@/components/NFTImage";
 import NFTModal from "@/components/NFTModal";
+import Image from "next/image";
 
-interface ViewListProps {
+interface View1Props {
   nfts: { [symbol: string]: NFTAsset[] };
   openSymbols: Set<string>;
   toggleSymbol: (symbol: string) => void;
-  layoutMode: "mosaic" | "list";
-  displayMode: "grid" | "data";
 }
 
-const ViewList: React.FC<ViewListProps> = ({
-  nfts,
-  openSymbols,
-  toggleSymbol,
-  layoutMode,
-  displayMode,
-}) => {
+const View1: React.FC<View1Props> = ({ nfts, openSymbols, toggleSymbol }) => {
   const [selectedNFTs, setSelectedNFTs] = useState<NFTAsset[] | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<string | null>(null);
   const [clickPosition, setClickPosition] = useState<{
@@ -44,13 +37,19 @@ const ViewList: React.FC<ViewListProps> = ({
     setSelectedCreator(creator);
   };
 
+  const getImageSrc = (nft: NFTAsset): string => {
+    return (
+      nft.content.links?.image ||
+      nft.content.metadata?.image ||
+      nft.content.json_uri ||
+      ""
+    );
+  };
+
   return (
     <div className="flex flex-wrap gap-6 justify-center">
       {Object.entries(nfts).map(([creator, creatorNFTs]) => {
-        const displayNFTs =
-          layoutMode === "mosaic" || openSymbols.has(creator)
-            ? creatorNFTs
-            : [creatorNFTs[0]];
+        const displayNFTs = [creatorNFTs[0]];
         const tileId = `tile-${creator}`;
 
         return (
@@ -65,25 +64,22 @@ const ViewList: React.FC<ViewListProps> = ({
             </h2>
             <p className="text-gray-500">{creatorNFTs.length} NFTs</p>
             <div className="flex flex-wrap gap-4 mt-4">
-              {displayNFTs.map((nft) => {
-                const imageUrl =
-                  nft.content.links?.image ||
-                  nft.content.metadata?.image ||
-                  nft.content.json_uri;
-
-                return (
-                  <div
-                    key={nft.id}
-                    className="bg-gray-700 rounded-lg p-4 max-w-[300px]"
-                  >
-                    <NFTImage
-                      src={imageUrl}
+              {displayNFTs.map((nft) => (
+                <div
+                  key={nft.id}
+                  className="bg-gray-700 rounded-lg p-4 max-w-[300px]"
+                >
+                  <div className="relative w-[240px] h-[240px]">
+                    <Image
+                      src={getImageSrc(nft)}
                       alt={nft.content.metadata.name || "NFT Image"}
-                      layoutMode={layoutMode}
+                      className="object-contain"
+                      fill
+                      unoptimized={true}
                     />
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -105,4 +101,4 @@ const ViewList: React.FC<ViewListProps> = ({
   );
 };
 
-export default ViewList;
+export default View1;
