@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { NFTAsset } from "@/utils/helius";
 import { motion, AnimatePresence } from "framer-motion";
+import NFTMetadata from "./NFTMetadata";
 
 interface NFTModalProps {
   isOpen: boolean;
@@ -105,48 +106,13 @@ const NFTModal: React.FC<NFTModalProps> = ({
               </div>
             </div>
 
-            {/* Floating metadata sidebar */}
+            {/* Floating metadata sidebar - now wider and with unified panel */}
             <div
-              className="absolute top-0 right-8 w-72 h-[65vh] bg-gray-800/30 rounded-xl overflow-hidden"
+              className="absolute top-0 right-8 w-96 h-[65vh] bg-gray-800/30 rounded-xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Top half - Formatted metadata */}
-              <div className="h-1/2 p-4 overflow-y-auto border-b border-gray-700/50">
-                <div className="space-y-4 text-gray-400">
-                  <p className="text-sm">
-                    <span className="font-semibold">Description:</span>
-                    <br />
-                    {nfts[currentIndex].content.metadata.description}
-                  </p>
-                  <div>
-                    <span className="font-semibold">Attributes:</span>
-                    <br />
-                    <span className="text-xs">
-                      {JSON.stringify(
-                        nfts[currentIndex].content.metadata.attributes,
-                        null,
-                        2
-                      )}
-                    </span>
-                  </div>
-                  <p className="text-sm">
-                    <span className="font-semibold">Links:</span>
-                    <br />
-                    {nfts[currentIndex].content.links?.external_url}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">ID:</span>
-                    <br />
-                    {nfts[currentIndex].id}
-                  </p>
-                </div>
-              </div>
-
-              {/* Bottom half - Raw metadata */}
-              <div className="h-1/2 p-4 overflow-y-auto bg-gray-800/40">
-                <pre className="text-xs text-gray-400 font-mono whitespace-pre-wrap">
-                  {JSON.stringify(nfts[currentIndex].content.metadata, null, 2)}
-                </pre>
+              <div className="h-full p-6 overflow-y-auto">
+                <NFTMetadata nft={nfts[currentIndex]} />
               </div>
             </div>
           </div>
