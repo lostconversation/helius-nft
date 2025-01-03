@@ -20,30 +20,45 @@ const ViewList: React.FC<ViewListProps> = ({
 }) => {
   const [selectedNFTs, setSelectedNFTs] = useState<NFTAsset[] | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<string | null>(null);
+  const [clickPosition, setClickPosition] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
-  const handleTileClick = (creatorNFTs: NFTAsset[], creator: string) => {
+  const handleTileClick = (
+    creatorNFTs: NFTAsset[],
+    creator: string,
+    event: React.MouseEvent<HTMLDivElement>
+  ) => {
+    const tile = event.currentTarget;
+    const rect = tile.getBoundingClientRect();
+    setClickPosition({
+      x: rect.left,
+      y: rect.top,
+      width: rect.width,
+      height: rect.height,
+    });
     setSelectedNFTs(creatorNFTs);
     setSelectedCreator(creator);
   };
 
-  const closeModal = () => {
-    setSelectedNFTs(null);
-    setSelectedCreator(null);
-  };
-
   return (
-    <div className="flex flex-wrap gap-6">
+    <div className="flex flex-wrap gap-6 justify-center">
       {Object.entries(nfts).map(([creator, creatorNFTs]) => {
         const displayNFTs =
           layoutMode === "mosaic" || openSymbols.has(creator)
             ? creatorNFTs
             : [creatorNFTs[0]];
+        const tileId = `tile-${creator}`;
 
         return (
           <div
+            id={tileId}
             key={creator}
-            className="bg-gray-800 rounded-xl shadow-md p-6 flex-grow-0 cursor-pointer"
-            onClick={() => handleTileClick(creatorNFTs, creator)}
+            className="bg-gray-800 rounded-xl shadow-md p-6 flex-grow-0 cursor-pointer transition-all duration-200"
+            onClick={(e) => handleTileClick(creatorNFTs, creator, e)}
           >
             <h2 className="text-xl font-semibold text-gray-300 title-overflow">
               {creator}
@@ -73,12 +88,17 @@ const ViewList: React.FC<ViewListProps> = ({
           </div>
         );
       })}
-      {selectedNFTs && selectedCreator && (
+      {selectedNFTs && selectedCreator && clickPosition && (
         <NFTModal
           isOpen={!!selectedNFTs}
-          onClose={closeModal}
+          onClose={() => {
+            setSelectedNFTs(null);
+            setSelectedCreator(null);
+            setClickPosition(null);
+          }}
           nfts={selectedNFTs}
           creator={selectedCreator}
+          initialPosition={clickPosition}
         />
       )}
     </div>
