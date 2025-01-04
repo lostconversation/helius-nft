@@ -37,8 +37,8 @@ export default function Home() {
     "all"
   );
   const [inspectorFilter, setInspectorFilter] = useState<
-    "clear" | "all" | "animations" | "immutable" | "cNFT"
-  >("clear");
+    "all" | "animations" | "immutable" | "cNFT"
+  >("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [additionalAddresses] = useState([
     "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC",
@@ -48,37 +48,10 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>("1");
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("normal");
 
-  const handleInspectorFilterChange = (filter: string) => {
-    if (filter !== inspectorFilter) {
-      setInspectorFilter(
-        filter as "clear" | "all" | "animations" | "immutable" | "cNFT"
-      );
-      if (filter === "clear") {
-        setOpenSymbols(new Set());
-      } else if (filter === "all") {
-        setOpenSymbols(new Set(Object.keys(nfts)));
-      } else {
-        const filteredSymbols = new Set<string>();
-        Object.entries(nfts).forEach(([creator, creatorNFTs]) => {
-          const hasMatchingNFTs = creatorNFTs.some((nft) => {
-            switch (filter) {
-              case "animations":
-                return nft.content.links?.animation_url;
-              case "immutable":
-                return !nft.mutable;
-              case "cNFT":
-                return nft.compression?.compressed;
-              default:
-                return true;
-            }
-          });
-          if (hasMatchingNFTs) {
-            filteredSymbols.add(creator);
-          }
-        });
-        setOpenSymbols(filteredSymbols);
-      }
-    }
+  const handleInspectorFilterChange = (
+    filter: "all" | "animations" | "immutable" | "cNFT"
+  ) => {
+    setInspectorFilter(filter);
   };
 
   useEffect(() => {
@@ -133,30 +106,33 @@ export default function Home() {
     });
   };
 
-  const filterNFTsByInspector = (
-    nfts: GroupedNFTs,
-    filter: string
-  ): GroupedNFTs => {
-    if (filter === "clear" || filter === "all") {
-      return nfts;
-    }
+  const filterNFTs = (nfts: { [symbol: string]: NFTAsset[] }) => {
+    if (inspectorFilter === "all") return nfts;
 
-    const filteredNFTs: GroupedNFTs = {};
+    const filteredNFTs: { [symbol: string]: NFTAsset[] } = {};
 
-    Object.entries(nfts).forEach(([creator, creatorNFTs]) => {
-      const filtered = creatorNFTs.filter((nft) => {
-        if (filter === "animations") {
-          // Check for valid animation URL in both places it might appear
-          return (
-            nft.content.links?.animation_url ||
-            nft.content.metadata?.animation_url
-          );
+    Object.entries(nfts).forEach(([symbol, assets]) => {
+      const filteredAssets = assets.filter((nft) => {
+        switch (inspectorFilter) {
+          case "animations":
+            // Check if NFT has animation_url in content
+            return nft.content.files?.some(
+              (file) =>
+                file.type?.includes("video") || file.type?.includes("animation")
+            );
+          case "immutable":
+            // Check if NFT is mutable
+            return nft.mutable;
+          case "cNFT":
+            // Check if NFT is compressed
+            return nft.compression?.compressed === true;
+          default:
+            return true;
         }
-        return true;
       });
 
-      if (filtered.length > 0) {
-        filteredNFTs[creator] = filtered;
+      if (filteredAssets.length > 0) {
+        filteredNFTs[symbol] = filteredAssets;
       }
     });
 
@@ -172,7 +148,7 @@ export default function Home() {
       case "1":
         return (
           <View1
-            nfts={nfts}
+            nfts={filterNFTs(nfts)}
             openSymbols={openSymbols}
             toggleSymbol={toggleSymbol}
             zoomLevel={zoomLevel}
@@ -181,7 +157,7 @@ export default function Home() {
       case "2":
         return (
           <View2
-            nfts={nfts}
+            nfts={filterNFTs(nfts)}
             openSymbols={openSymbols}
             toggleSymbol={toggleSymbol}
             zoomLevel={zoomLevel}
@@ -190,7 +166,7 @@ export default function Home() {
       case "3":
         return (
           <View3
-            nfts={nfts}
+            nfts={filterNFTs(nfts)}
             openSymbols={openSymbols}
             toggleSymbol={toggleSymbol}
             zoomLevel={zoomLevel}
