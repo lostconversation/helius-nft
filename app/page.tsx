@@ -163,15 +163,8 @@ export default function Home() {
     return filteredNFTs;
   };
 
-  const handleZoomChange = (direction: "in" | "out") => {
-    const levels: ZoomLevel[] = ["small", "normal", "big", "mega"];
-    const currentIndex = levels.indexOf(zoomLevel);
-
-    if (direction === "in" && currentIndex < levels.length - 1) {
-      setZoomLevel(levels[currentIndex + 1]);
-    } else if (direction === "out" && currentIndex > 0) {
-      setZoomLevel(levels[currentIndex - 1]);
-    }
+  const handleZoomChange = (newLevel: ZoomLevel) => {
+    setZoomLevel(newLevel);
   };
 
   const renderCurrentView = () => {

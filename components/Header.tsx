@@ -27,7 +27,7 @@ interface HeaderProps {
   viewMode: "1" | "2" | "3";
   setViewMode: (viewMode: "1" | "2" | "3") => void;
   zoomLevel: ZoomLevel;
-  onZoomChange: (direction: "in" | "out") => void;
+  onZoomChange: (newLevel: ZoomLevel) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -247,7 +247,7 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                   <button
                     onClick={() => setViewMode("3")}
-                    className={`px-3 py-1 ${
+                    className={`px-3 py-1 rounded-r-lg ${
                       viewMode === "3"
                         ? "bg-blue-500 text-white"
                         : "bg-gray-600 text-gray-300 hover:bg-gray-500"
@@ -257,6 +257,9 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                 </div>
               </div>
+
+              {/* ZOOM Section - aligned with VIEW */}
+              <ZoomControl zoomLevel={zoomLevel} onZoomChange={onZoomChange} />
 
               {/* NFT Section */}
               <div className="flex flex-col space-y-1">

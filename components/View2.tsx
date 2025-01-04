@@ -116,7 +116,13 @@ const View2: React.FC<View3Props> = ({
                     handleTileClick(nft, creatorNFTs, creator, index, e)
                   }
                 >
-                  <div className="relative w-[240px] h-[240px] bg-gray-700 rounded-lg p-4">
+                  <div
+                    className="relative w-[240px] h-[240px] bg-gray-700 rounded-lg p-4"
+                    style={{
+                      width: `${calculateSize(240, zoomLevel)}px`,
+                      height: `${calculateSize(240, zoomLevel)}px`,
+                    }}
+                  >
                     <Image
                       src={getImageSrc(nft)}
                       alt={nft.content.metadata.name || "NFT Image"}

@@ -4,7 +4,7 @@ type ZoomLevel = "small" | "normal" | "big" | "mega";
 
 interface ZoomControlProps {
   zoomLevel: ZoomLevel;
-  onZoomChange: (direction: "in" | "out") => void;
+  onZoomChange: (newLevel: ZoomLevel) => void;
 }
 
 const ZoomControl: React.FC<ZoomControlProps> = ({
@@ -12,32 +12,50 @@ const ZoomControl: React.FC<ZoomControlProps> = ({
   onZoomChange,
 }) => {
   return (
-    <div className="flex items-center gap-2 bg-gray-800 rounded-full px-3 py-1.5">
-      <button
-        onClick={() => onZoomChange("out")}
-        disabled={zoomLevel === "small"}
-        className={`text-white font-bold w-6 h-6 flex items-center justify-center rounded-full 
-          ${
+    <div className="flex flex-col space-y-1">
+      <span className="text-xs text-gray-500">ZOOM</span>
+      <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+        <button
+          onClick={() => onZoomChange("small")}
+          className={`px-3 py-1 rounded-l-lg ${
             zoomLevel === "small"
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-gray-700"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-600 text-gray-300 hover:bg-gray-500"
           }`}
-      >
-        -
-      </button>
-      <span className="text-white text-sm font-medium px-2">ZOOM</span>
-      <button
-        onClick={() => onZoomChange("in")}
-        disabled={zoomLevel === "mega"}
-        className={`text-white font-bold w-6 h-6 flex items-center justify-center rounded-full 
-          ${
+        >
+          1
+        </button>
+        <button
+          onClick={() => onZoomChange("normal")}
+          className={`px-3 py-1 ${
+            zoomLevel === "normal"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+          }`}
+        >
+          2
+        </button>
+        <button
+          onClick={() => onZoomChange("big")}
+          className={`px-3 py-1 ${
+            zoomLevel === "big"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+          }`}
+        >
+          3
+        </button>
+        <button
+          onClick={() => onZoomChange("mega")}
+          className={`px-3 py-1 rounded-r-lg ${
             zoomLevel === "mega"
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-gray-700"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-600 text-gray-300 hover:bg-gray-500"
           }`}
-      >
-        +
-      </button>
+        >
+          4
+        </button>
+      </div>
     </div>
   );
 };
