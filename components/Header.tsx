@@ -14,14 +14,10 @@ interface HeaderProps {
   setTypeFilter: (
     typeFilter: "all" | "drip" | "@" | "youtu" | "???" | "spam"
   ) => void;
-  quantityFilter: "all" | ">3" | "1";
-  setQuantityFilter: (quantityFilter: "all" | ">3" | "1") => void;
-  layoutMode: "mosaic" | "list";
-  setLayoutMode: (layoutMode: "mosaic" | "list") => void;
-  displayMode: "grid" | "data";
-  setDisplayMode: (displayMode: "grid" | "data") => void;
-  inspectorFilter: "clear" | "all" | "animations" | "immutable" | "cNFT";
-  handleInspectorFilterChange: (filter: string) => void;
+  inspectorFilter: "all" | "animations" | "immutable" | "cNFT";
+  handleInspectorFilterChange: (
+    filter: "all" | "animations" | "immutable" | "cNFT"
+  ) => void;
   loadNFTs: () => void;
   additionalAddresses: string[];
   viewMode: "1" | "2" | "3";
@@ -39,12 +35,6 @@ const Header: React.FC<HeaderProps> = ({
   setSortType,
   typeFilter,
   setTypeFilter,
-  quantityFilter,
-  setQuantityFilter,
-  layoutMode,
-  setLayoutMode,
-  displayMode,
-  setDisplayMode,
   inspectorFilter,
   handleInspectorFilterChange,
   loadNFTs,

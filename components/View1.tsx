@@ -105,7 +105,9 @@ const View1: React.FC<View1Props> = ({
             <h2 className="text-xl font-semibold text-gray-300 title-overflow">
               {creator}
             </h2>
-            <p className="text-gray-500">{creatorNFTs.length} NFTs</p>
+            <p className="text-gray-500">
+              {creatorNFTs.length} {creatorNFTs.length === 1 ? "NFT" : "NFTs"}
+            </p>
             <div className="mt-4 w-full">
               {displayNFTs.map((nft) => (
                 <div
