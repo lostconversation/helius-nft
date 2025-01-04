@@ -192,7 +192,7 @@ export default function Home() {
         setViewMode={setViewMode}
         zoomLevel={zoomLevel}
         onZoomChange={handleZoomChange}
-        nfts={nfts}
+        nfts={filterNFTs(nfts)}
       />
 
       <div className="p-4">
