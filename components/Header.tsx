@@ -107,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right Side - ARTIST, VIEW, NFT */}
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-2 items-end">
             {/* ARTIST Section */}
             <div className="flex flex-col space-y-1">
               <span className="text-xs text-gray-500">ARTIST</span>
@@ -219,8 +219,55 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* VIEW and NFT Row */}
-            <div className="flex space-x-4">
+            {/* VIEW, NFT, and ZOOM Row */}
+            <div className="flex space-x-4 justify-end">
+              {/* NFT Section */}
+              <div className="flex flex-col space-y-1">
+                <span className="text-xs text-gray-500">NFT</span>
+                <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+                  <button
+                    onClick={() => handleInspectorFilterChange("all")}
+                    className={`px-3 py-1 rounded-l-lg ${
+                      inspectorFilter === "all"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => handleInspectorFilterChange("animations")}
+                    className={`px-3 py-1 ${
+                      inspectorFilter === "animations"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Animations
+                  </button>
+                  <button
+                    onClick={() => handleInspectorFilterChange("immutable")}
+                    className={`px-3 py-1 ${
+                      inspectorFilter === "immutable"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    isMutable
+                  </button>
+                  <button
+                    onClick={() => handleInspectorFilterChange("cNFT")}
+                    className={`px-3 py-1 rounded-r-lg ${
+                      inspectorFilter === "cNFT"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    cNFT
+                  </button>
+                </div>
+              </div>
+
               {/* VIEW Section */}
               <div className="flex flex-col space-y-1">
                 <span className="text-xs text-gray-500">VIEW</span>
@@ -258,89 +305,8 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
 
-              {/* ZOOM Section - aligned with VIEW */}
+              {/* ZOOM Section */}
               <ZoomControl zoomLevel={zoomLevel} onZoomChange={onZoomChange} />
-
-              {/* NFT Section */}
-              <div className="flex flex-col space-y-1">
-                <span className="text-xs text-gray-500">NFT</span>
-                <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
-                  <div className="flex space-x-0">
-                    <button
-                      onClick={() => setDisplayMode("grid")}
-                      className={`px-3 py-1 rounded-l-lg ${
-                        displayMode === "grid"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      Grid
-                    </button>
-                    <button
-                      onClick={() => setDisplayMode("data")}
-                      className={`px-3 py-1 rounded-r-lg ${
-                        displayMode === "data"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      Data
-                    </button>
-                  </div>
-                  <div className="flex space-x-0">
-                    <button
-                      onClick={() => handleInspectorFilterChange("clear")}
-                      className={`px-3 py-1 rounded-l-lg ${
-                        inspectorFilter === "clear"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={() => handleInspectorFilterChange("all")}
-                      className={`px-3 py-1 ${
-                        inspectorFilter === "all"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      All
-                    </button>
-                    <button
-                      onClick={() => handleInspectorFilterChange("animations")}
-                      className={`px-3 py-1 ${
-                        inspectorFilter === "animations"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      Animations
-                    </button>
-                    <button
-                      onClick={() => handleInspectorFilterChange("immutable")}
-                      className={`px-3 py-1 ${
-                        inspectorFilter === "immutable"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      Immutable
-                    </button>
-                    <button
-                      onClick={() => handleInspectorFilterChange("cnft")}
-                      className={`px-3 py-1 rounded-r-lg ${
-                        inspectorFilter === "cnft"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                      }`}
-                    >
-                      cNFT
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
