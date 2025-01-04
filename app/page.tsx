@@ -3,19 +3,18 @@
 import { useState, useEffect } from "react";
 import { loadNFTs } from "@/utils/loadNFTs";
 import Header from "@/components/Header";
-import ViewMosaic from "@/components/ViewMosaic";
-import ViewList from "@/components/ViewList";
 import LoadingPopup from "@/components/LoadingPopup";
 import { NFTAsset } from "@/utils/helius";
 import View1 from "@/components/View1";
 import View2 from "@/components/View2";
 import View3 from "@/components/View3";
-import View4 from "@/components/View4";
 import { ViewMode } from "@/types/index";
 
 interface GroupedNFTs {
   [symbol: string]: NFTAsset[];
 }
+
+type ZoomLevel = "small" | "normal" | "big" | "mega";
 
 export default function Home() {
   const [nfts, setNfts] = useState<GroupedNFTs>({});
@@ -47,6 +46,7 @@ export default function Home() {
     "5hWu757purMHhha9THytqkNgv5Cqbim4ossod2PBUJwM",
   ]);
   const [viewMode, setViewMode] = useState<ViewMode>("1");
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("normal");
 
   const handleInspectorFilterChange = (filter: string) => {
     if (filter !== inspectorFilter) {
@@ -163,6 +163,51 @@ export default function Home() {
     return filteredNFTs;
   };
 
+  const handleZoomChange = (direction: "in" | "out") => {
+    const levels: ZoomLevel[] = ["small", "normal", "big", "mega"];
+    const currentIndex = levels.indexOf(zoomLevel);
+
+    if (direction === "in" && currentIndex < levels.length - 1) {
+      setZoomLevel(levels[currentIndex + 1]);
+    } else if (direction === "out" && currentIndex > 0) {
+      setZoomLevel(levels[currentIndex - 1]);
+    }
+  };
+
+  const renderCurrentView = () => {
+    switch (viewMode) {
+      case "1":
+        return (
+          <View1
+            nfts={nfts}
+            openSymbols={openSymbols}
+            toggleSymbol={toggleSymbol}
+            zoomLevel={zoomLevel}
+          />
+        );
+      case "2":
+        return (
+          <View2
+            nfts={nfts}
+            openSymbols={openSymbols}
+            toggleSymbol={toggleSymbol}
+            zoomLevel={zoomLevel}
+          />
+        );
+      case "3":
+        return (
+          <View3
+            nfts={nfts}
+            openSymbols={openSymbols}
+            toggleSymbol={toggleSymbol}
+            zoomLevel={zoomLevel}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen">
       {loading && <LoadingPopup progress={progress} />}
@@ -186,31 +231,11 @@ export default function Home() {
         additionalAddresses={additionalAddresses}
         viewMode={viewMode}
         setViewMode={setViewMode}
+        zoomLevel={zoomLevel}
+        onZoomChange={handleZoomChange}
       />
       <div className="p-4">
-        {viewMode === "1" && (
-          <View1
-            nfts={nfts}
-            openSymbols={openSymbols}
-            toggleSymbol={toggleSymbol}
-          />
-        )}
-
-        {viewMode === "2" && (
-          <View2
-            nfts={nfts}
-            openSymbols={openSymbols}
-            toggleSymbol={toggleSymbol}
-          />
-        )}
-
-        {viewMode === "3" && (
-          <View3
-            nfts={nfts}
-            openSymbols={openSymbols}
-            toggleSymbol={toggleSymbol}
-          />
-        )}
+        {renderCurrentView()}
 
         {viewMode === "4" && (
           <View4

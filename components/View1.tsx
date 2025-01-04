@@ -3,14 +3,21 @@ import { NFTAsset } from "@/utils/helius";
 import { NFTImage } from "@/components/NFTImage";
 import NFTModal from "@/components/NFTModal";
 import Image from "next/image";
+import { calculateSize } from "@/utils/zoomUtils";
 
 interface View1Props {
   nfts: { [symbol: string]: NFTAsset[] };
   openSymbols: Set<string>;
   toggleSymbol: (symbol: string) => void;
+  zoomLevel: ZoomLevel;
 }
 
-const View1: React.FC<View1Props> = ({ nfts, openSymbols, toggleSymbol }) => {
+const View1: React.FC<View1Props> = ({
+  nfts,
+  openSymbols,
+  toggleSymbol,
+  zoomLevel,
+}) => {
   const [selectedNFTs, setSelectedNFTs] = useState<NFTAsset[] | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<string | null>(null);
   const [clickPosition, setClickPosition] = useState<{
@@ -19,6 +26,8 @@ const View1: React.FC<View1Props> = ({ nfts, openSymbols, toggleSymbol }) => {
     width: number;
     height: number;
   } | null>(null);
+
+  const tileSize = calculateSize(240, zoomLevel);
 
   const handleTileClick = (
     creatorNFTs: NFTAsset[],

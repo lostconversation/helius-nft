@@ -1,4 +1,5 @@
 import React from "react";
+import ZoomControl from "./ZoomControl";
 
 interface HeaderProps {
   address: string;
@@ -23,8 +24,10 @@ interface HeaderProps {
   handleInspectorFilterChange: (filter: string) => void;
   loadNFTs: () => void;
   additionalAddresses: string[];
-  viewMode: "1" | "2" | "3" | "4";
-  setViewMode: (viewMode: "1" | "2" | "3" | "4") => void;
+  viewMode: "1" | "2" | "3";
+  setViewMode: (viewMode: "1" | "2" | "3") => void;
+  zoomLevel: ZoomLevel;
+  onZoomChange: (direction: "in" | "out") => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -48,6 +51,8 @@ const Header: React.FC<HeaderProps> = ({
   additionalAddresses,
   viewMode,
   setViewMode,
+  zoomLevel,
+  onZoomChange,
 }) => {
   return (
     <header className="sticky top-0 bg-gray-800 p-4 shadow-md z-10">
@@ -249,16 +254,6 @@ const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     3
-                  </button>
-                  <button
-                    onClick={() => setViewMode("4")}
-                    className={`px-3 py-1 rounded-r-lg ${
-                      viewMode === "4"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    4
                   </button>
                 </div>
               </div>

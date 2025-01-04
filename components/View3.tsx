@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { NFTAsset } from "@/utils/helius";
 import NFTModal from "@/components/NFTModal";
 import Image from "next/image";
+import { calculateSize } from "@/utils/zoomUtils";
 
-interface View3Props {
+interface View4Props {
   nfts: { [symbol: string]: NFTAsset[] };
   openSymbols: Set<string>;
   toggleSymbol: (symbol: string) => void;
+  zoomLevel: ZoomLevel;
 }
 
-const View3: React.FC<View3Props> = ({ nfts, openSymbols, toggleSymbol }) => {
+const View3: React.FC<View4Props> = ({
+  nfts,
+  openSymbols,
+  toggleSymbol,
+  zoomLevel,
+}) => {
   const [selectedNFTs, setSelectedNFTs] = useState<NFTAsset[] | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -19,18 +26,6 @@ const View3: React.FC<View3Props> = ({ nfts, openSymbols, toggleSymbol }) => {
     width: number;
     height: number;
   } | null>(null);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 0
-  );
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const handleTileClick = (
     nft: NFTAsset,
@@ -63,70 +58,67 @@ const View3: React.FC<View3Props> = ({ nfts, openSymbols, toggleSymbol }) => {
     );
   };
 
-  const getTitleMaxWidth = (nftCount: number): string => {
-    if (nftCount === 1) return "200px";
-    if (nftCount === 2) return "400px";
-    return `${nftCount * 240 + (nftCount - 1) * 16}px`; // images width + gaps
-  };
+  const renderPreviewTile = (nfts: NFTAsset[], creator: string) => {
+    const displayNFTs = nfts.slice(0, 4);
+    const remainingCount = nfts.length > 4 ? nfts.length - 4 : 0;
 
-  const getContainerWidth = (nftCount: number): string => {
-    // Calculate the total width needed for all NFTs
-    const totalWidth = nftCount * 240 + (nftCount - 1) * 16 + 48; // NFTs + gaps + padding
-    // Use windowWidth from state instead of direct window.innerWidth
-    if (totalWidth > windowWidth - 32) {
-      return "100%";
-    }
-    return `${totalWidth}px`;
+    const gridConfig = {
+      1: "grid-cols-1",
+      2: "grid-cols-2",
+      3: "grid-cols-2",
+      4: "grid-cols-2",
+    }[Math.min(4, nfts.length)];
+
+    return (
+      <div className={`grid ${gridConfig} gap-2 aspect-square w-full h-full`}>
+        {displayNFTs.map((nft, index) => {
+          const isLarge = nfts.length === 3 && index === 0;
+          const gridSpan = isLarge ? "row-span-2" : "";
+
+          return (
+            <div
+              key={nft.id}
+              className={`relative cursor-pointer ${gridSpan} bg-gray-700/50 rounded-lg overflow-hidden`}
+              onClick={(e) => handleTileClick(nft, nfts, creator, index, e)}
+            >
+              <div className="absolute inset-0">
+                <Image
+                  src={getImageSrc(nft)}
+                  alt={nft.content.metadata.name || "NFT"}
+                  className="object-cover"
+                  fill
+                  unoptimized={true}
+                />
+              </div>
+            </div>
+          );
+        })}
+        {remainingCount > 0 && (
+          <div className="absolute bottom-2 right-2 bg-black/50 px-3 py-1.5 rounded-full text-white text-sm font-medium">
+            +{remainingCount}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div className="flex flex-wrap gap-6 p-4 justify-center overflow-hidden">
+    <div className="flex flex-wrap gap-6 p-4 justify-center">
       {Object.entries(nfts).map(([creator, creatorNFTs]) => (
         <div
           key={creator}
           className="bg-gray-800/30 rounded-xl p-6"
           style={{
-            width: getContainerWidth(creatorNFTs.length),
+            width: `min(${calculateSize(400, zoomLevel)}px, 100%)`,
             flexGrow: 0,
             flexShrink: 0,
           }}
         >
-          <h2
-            className="text-2xl font-bold text-white mb-4 truncate text-center"
-            style={{
-              maxWidth: getTitleMaxWidth(creatorNFTs.length),
-              margin: "0 auto 1rem auto",
-            }}
-          >
+          <h2 className="text-2xl font-bold text-white mb-4 truncate">
             {creator}
           </h2>
-          <div className="relative">
-            <div className="flex space-x-4 overflow-x-auto scrollbar-hide pb-2 justify-center">
-              {creatorNFTs.map((nft, index) => (
-                <div
-                  key={nft.id}
-                  className="flex-shrink-0 cursor-pointer"
-                  onClick={(e) =>
-                    handleTileClick(nft, creatorNFTs, creator, index, e)
-                  }
-                >
-                  <div className="relative w-[240px] h-[240px] bg-gray-700 rounded-lg p-4">
-                    <Image
-                      src={getImageSrc(nft)}
-                      alt={nft.content.metadata.name || "NFT Image"}
-                      className="object-contain"
-                      fill
-                      unoptimized={true}
-                    />
-                  </div>
-                  <div className="mt-2 text-center">
-                    <h3 className="text-white text-sm truncate max-w-[240px]">
-                      {nft.content.metadata.name}
-                    </h3>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="relative aspect-square">
+            {renderPreviewTile(creatorNFTs, creator)}
           </div>
         </div>
       ))}
