@@ -40,10 +40,24 @@ export const loadNFTs = async (
 
     // Type filter
     if (typeFilter !== "all") {
-      const isDrip = creatorId.startsWith("DRIP:");
-      const isAtSymbol = creatorId.startsWith("@");
-      const isYoutu = creatorId.toLowerCase().startsWith("youtu");
-      const isLongName = creatorId.length >= 20;
+      const isDrip =
+        creatorId.startsWith("DRIP:") || creatorId.includes("DRIP:");
+      const isAtSymbol = creatorId.startsWith("@") || creatorId.includes("@");
+      const isYoutu = creatorId.toLowerCase().includes("youtu");
+      const isLongName =
+        creatorId.length >= 40 && !isDrip && !isAtSymbol && !isYoutu;
+
+      // Debug logging
+      if (creatorId.includes("DRIP:") || creatorId.includes("@")) {
+        console.log("Found potential intruder:", {
+          creatorId,
+          isDrip,
+          isAtSymbol,
+          isYoutu,
+          isLongName,
+          typeFilter,
+        });
+      }
 
       if (
         (typeFilter === "drip" && !isDrip) ||
@@ -111,22 +125,40 @@ export const loadNFTs = async (
 };
 
 const getCreatorIdentifier = (nft: NFTAsset): string => {
+  // First check for DRIP projects
   const dripHausUrl = nft.content.links?.external_url;
   const isDripProject =
     dripHausUrl?.startsWith("https://drip.haus/") ||
     dripHausUrl === "https://drip.haus";
   const dripArtist = isDripProject ? dripHausUrl?.split("/").pop() : null;
   if (isDripProject) return `DRIP: ${dripArtist || "drip.haus"}`;
+
+  // Then check for artist attribute
+  const artistAttribute = nft.content.metadata.attributes?.find(
+    (attr) => (attr.trait_type || attr.traitType)?.toLowerCase() === "artist"
+  );
+  if (artistAttribute?.value) {
+    // If artist value starts with @, return as is
+    if (artistAttribute.value.startsWith("@")) return artistAttribute.value;
+    // If it's a URL, clean it up
+    if (artistAttribute.value.startsWith("http")) {
+      return artistAttribute.value
+        .replace(/^https?:\/\//, "")
+        .replace(/^www\./, "")
+        .replace(/\/$/, "");
+    }
+    return artistAttribute.value;
+  }
+
+  // Then check external URL
   if (dripHausUrl) {
     return dripHausUrl
       .replace(/^https?:\/\//, "")
       .replace(/^www\./, "")
       .replace(/\/$/, "");
   }
-  const artistAttribute = nft.content.metadata.attributes?.find(
-    (attr) => (attr.trait_type || attr.traitType)?.toLowerCase() === "artist"
-  );
-  if (artistAttribute?.value) return artistAttribute.value;
+
+  // Finally, fallback to other identifiers
   if (nft.compression?.creator_hash) return nft.compression.creator_hash;
   if (nft.content.metadata.symbol) return nft.content.metadata.symbol;
   return nft.authorities?.[0]?.address || "Unknown";

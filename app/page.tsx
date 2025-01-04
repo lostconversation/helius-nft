@@ -184,20 +184,17 @@ export default function Home() {
         setSortType={setSortType}
         typeFilter={typeFilter}
         setTypeFilter={setTypeFilter}
-        quantityFilter={quantityFilter}
-        setQuantityFilter={setQuantityFilter}
-        layoutMode={layoutMode}
-        setLayoutMode={setLayoutMode}
-        displayMode={displayMode}
-        setDisplayMode={setDisplayMode}
         inspectorFilter={inspectorFilter}
         handleInspectorFilterChange={handleInspectorFilterChange}
+        loadNFTs={loadNFTs}
         additionalAddresses={additionalAddresses}
         viewMode={viewMode}
         setViewMode={setViewMode}
         zoomLevel={zoomLevel}
         onZoomChange={handleZoomChange}
+        nfts={nfts}
       />
+
       <div className="p-4">
         {renderCurrentView()}
 

@@ -24,7 +24,53 @@ interface HeaderProps {
   setViewMode: (viewMode: "1" | "2" | "3") => void;
   zoomLevel: ZoomLevel;
   onZoomChange: (newLevel: ZoomLevel) => void;
+  nfts: GroupedNFTs;
 }
+
+const StatsDisplay: React.FC<{ nfts: GroupedNFTs; typeFilter: string }> =
+  React.memo(({ nfts, typeFilter }) => {
+    const filteredStats = Object.entries(nfts).filter(
+      ([creator, creatorNFTs]) => {
+        if (typeFilter !== "all") {
+          const isDrip = creator.includes("DRIP:");
+          const isAtSymbol = creator.includes("@");
+          const isYoutu = creator.toLowerCase().includes("youtu");
+          const isLongName =
+            creator.length >= 40 && !isDrip && !isAtSymbol && !isYoutu;
+
+          return (
+            (typeFilter === "drip" && isDrip) ||
+            (typeFilter === "@" && isAtSymbol) ||
+            (typeFilter === "youtu" && isYoutu) ||
+            (typeFilter === "???" && isLongName) ||
+            (typeFilter === "spam" &&
+              !(isDrip || isAtSymbol || isYoutu || isLongName))
+          );
+        }
+        return true;
+      }
+    );
+
+    const artistCount = filteredStats.length;
+    const nftCount = filteredStats.reduce(
+      (sum, [_, nfts]) => sum + nfts.length,
+      0
+    );
+
+    return (
+      <div className="flex flex-col space-y-1">
+        <span className="text-xs text-gray-500">STATS</span>
+        <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+          <div className="px-3 py-1 rounded-l-lg bg-gray-600 text-gray-300">
+            ARTISTS: {artistCount}
+          </div>
+          <div className="px-3 py-1 rounded-r-lg bg-gray-600 text-gray-300">
+            NFTs: {nftCount}
+          </div>
+        </div>
+      </div>
+    );
+  });
 
 const Header: React.FC<HeaderProps> = ({
   address,
@@ -43,6 +89,7 @@ const Header: React.FC<HeaderProps> = ({
   setViewMode,
   zoomLevel,
   onZoomChange,
+  nfts,
 }) => {
   return (
     <header className="sticky top-0 bg-gray-800 p-4 shadow-md z-10">
@@ -212,7 +259,7 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* VIEW, ZOOM, NFT Row */}
         <div className="flex justify-between">
-          {/* VIEW and ZOOM group */}
+          {/* VIEW and ZOOM and STATS group */}
           <div className="flex space-x-4">
             {/* VIEW Section */}
             <div className="flex flex-col space-y-1">
@@ -253,6 +300,9 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* ZOOM Section */}
             <ZoomControl zoomLevel={zoomLevel} onZoomChange={onZoomChange} />
+
+            {/* Stats Pill - Next to Zoom */}
+            <StatsDisplay nfts={nfts} typeFilter={typeFilter} />
           </div>
 
           {/* NFT Section - right aligned */}
