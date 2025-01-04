@@ -115,16 +115,11 @@ export default function Home() {
       const filteredAssets = assets.filter((nft) => {
         switch (inspectorFilter) {
           case "animations":
-            // Check if NFT has animation_url in content
-            return nft.content.files?.some(
-              (file) =>
-                file.type?.includes("video") || file.type?.includes("animation")
-            );
+            // Check specifically for animation_url in links
+            return Boolean(nft.content.links?.animation_url);
           case "immutable":
-            // Check if NFT is mutable
-            return nft.mutable;
+            return nft.mutable === false;
           case "cNFT":
-            // Check if NFT is compressed
             return nft.compression?.compressed === true;
           default:
             return true;
