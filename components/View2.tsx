@@ -132,7 +132,12 @@ const View2: React.FC<View3Props> = ({
                     />
                   </div>
                   <div className="mt-2 text-center">
-                    <h3 className="text-white text-sm truncate max-w-[240px]">
+                    <h3
+                      className="text-white/50 text-sm line-clamp-2 max-w-[240px] mx-auto"
+                      style={{
+                        width: `${calculateSize(240, zoomLevel)}px`,
+                      }}
+                    >
                       {nft.content.metadata.name}
                     </h3>
                   </div>

@@ -64,7 +64,7 @@ const View1: React.FC<View1Props> = ({
         const getContainerSize = () => {
           switch (zoomLevel) {
             case "small":
-              return 280;
+              return 160;
             case "normal":
               return 320;
             case "big":
@@ -80,13 +80,13 @@ const View1: React.FC<View1Props> = ({
         const getImageSize = () => {
           switch (zoomLevel) {
             case "small":
-              return 232; // 280 - 48
+              return 112;
             case "normal":
-              return 272; // 320 - 48
+              return 272;
             case "big":
-              return 312; // 360 - 48
+              return 312;
             case "mega":
-              return 352; // 400 - 48
+              return 352;
             default:
               return 272;
           }
