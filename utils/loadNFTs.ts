@@ -85,7 +85,6 @@ export const loadNFTs = async (
     return true;
   });
 
-  console.log("Filtered NFTs:", filteredNFTs);
   const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
     const creatorId = getCreatorIdentifier(nft);
     if (!acc[creatorId]) {
@@ -94,8 +93,6 @@ export const loadNFTs = async (
     acc[creatorId].push(nft);
     return acc;
   }, {});
-
-  console.log("Grouped NFTs by creator:", tempGrouped);
 
   // Apply sorting based on sortType
   const sortedGrouped = Object.entries(tempGrouped).sort(
@@ -115,7 +112,6 @@ export const loadNFTs = async (
     }
   );
 
-  console.log("Sorted grouped NFTs:", sortedGrouped);
   const groupedNFTs = Object.fromEntries(sortedGrouped);
 
   // Cache the result

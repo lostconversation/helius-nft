@@ -29,32 +29,14 @@ interface HeaderProps {
 
 const StatsDisplay: React.FC<{ nfts: GroupedNFTs; typeFilter: string }> =
   React.memo(({ nfts, typeFilter }) => {
-    const filteredStats = Object.entries(nfts).filter(
-      ([creator, creatorNFTs]) => {
-        if (typeFilter !== "all") {
-          const isDrip = creator.includes("DRIP:");
-          const isAtSymbol = creator.includes("@");
-          const isYoutu = creator.toLowerCase().includes("youtu");
-          const isLongName =
-            creator.length >= 40 && !isDrip && !isAtSymbol && !isYoutu;
-
-          return (
-            (typeFilter === "drip" && isDrip) ||
-            (typeFilter === "@" && isAtSymbol) ||
-            (typeFilter === "youtu" && isYoutu) ||
-            (typeFilter === "???" && isLongName) ||
-            (typeFilter === "spam" &&
-              !(isDrip || isAtSymbol || isYoutu || isLongName))
-          );
-        }
-        return true;
-      }
-    );
-
-    const artistCount = filteredStats.length;
-    const nftCount = filteredStats.reduce(
-      (sum, [_, nfts]) => sum + nfts.length,
-      0
+    const stats = Object.entries(nfts).reduce(
+      (acc, [_, nftsArray]) => {
+        return {
+          artists: acc.artists + 1,
+          nfts: acc.nfts + nftsArray.length,
+        };
+      },
+      { artists: 0, nfts: 0 }
     );
 
     return (
@@ -62,10 +44,10 @@ const StatsDisplay: React.FC<{ nfts: GroupedNFTs; typeFilter: string }> =
         <span className="text-xs text-gray-500">STATS</span>
         <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
           <div className="px-3 py-1 rounded-l-lg bg-gray-600 text-gray-300">
-            ARTISTS: {artistCount}
+            ARTISTS: {stats.artists}
           </div>
           <div className="px-3 py-1 rounded-r-lg bg-gray-600 text-gray-300">
-            NFTs: {nftCount}
+            NFTs: {stats.nfts}
           </div>
         </div>
       </div>
@@ -102,7 +84,7 @@ const Header: React.FC<HeaderProps> = ({
               <span className="text-xs text-gray-500">WALLET</span>
               <div
                 className="flex space-x-2 bg-gray-700 p-2 rounded-lg"
-                style={{ maxWidth: "670px" }}
+                style={{ maxWidth: "700px" }}
               >
                 <div className="flex space-x-0">
                   <button

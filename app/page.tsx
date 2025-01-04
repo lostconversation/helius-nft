@@ -115,7 +115,6 @@ export default function Home() {
       const filteredAssets = assets.filter((nft) => {
         switch (inspectorFilter) {
           case "animations":
-            // Check specifically for animation_url in links
             return Boolean(nft.content.links?.animation_url);
           case "immutable":
             return nft.mutable === false;
