@@ -33,6 +33,8 @@ export interface NFTAsset {
     };
     links?: {
       image?: string;
+      animation_url?: string;
+      external_url?: string;
     };
     json_uri: string;
   };

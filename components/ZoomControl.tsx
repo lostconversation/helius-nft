@@ -1,6 +1,5 @@
 import React from "react";
-
-type ZoomLevel = "small" | "normal" | "big" | "mega";
+import { ZoomLevel } from "@/types";
 
 interface ZoomControlProps {
   zoomLevel: ZoomLevel;

@@ -4,7 +4,50 @@ interface GroupedNFTs {
   [symbol: string]: NFTAsset[];
 }
 
+// Image URL transformation utilities
+export function getImageUrl(url: string): string {
+  if (!url) return "";
+
+  // Remove @ symbol if it exists at the start of the URL
+  if (url.startsWith("@")) {
+    url = url.substring(1);
+  }
+
+  // Handle IPFS URLs
+  if (url.startsWith("ipfs://")) {
+    return url.replace("ipfs://", "https://ipfs.io/ipfs/");
+  }
+
+  // Handle Arweave URLs
+  if (url.startsWith("ar://")) {
+    return url.replace("ar://", "https://arweave.net/");
+  }
+
+  return url;
+}
+
 const CACHE_KEY_PREFIX = "nfts_cache_";
+
+// Shared sorting function
+export const sortGroupedNFTs = (
+  groupedNFTs: GroupedNFTs,
+  sortType: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
+) => {
+  return Object.entries(groupedNFTs).sort(([aKey, aValue], [bKey, bValue]) => {
+    switch (sortType) {
+      case "quantityDesc":
+        return bValue.length - aValue.length;
+      case "quantityAsc":
+        return aValue.length - bValue.length;
+      case "nameAsc":
+        return aKey.localeCompare(bKey);
+      case "nameDesc":
+        return bKey.localeCompare(aKey);
+      default:
+        return 0;
+    }
+  });
+};
 
 export const loadNFTs = async (
   address: string,
@@ -84,22 +127,7 @@ export const loadNFTs = async (
   console.log("Grouped NFTs by creator:", tempGrouped);
 
   // Apply sorting based on sortType
-  const sortedGrouped = Object.entries(tempGrouped).sort(
-    ([aKey, aValue], [bKey, bValue]) => {
-      switch (sortType) {
-        case "quantityDesc":
-          return bValue.length - aValue.length;
-        case "quantityAsc":
-          return aValue.length - bValue.length;
-        case "nameAsc":
-          return aKey.localeCompare(bKey);
-        case "nameDesc":
-          return bKey.localeCompare(aKey);
-        default:
-          return 0;
-      }
-    }
-  );
+  const sortedGrouped = sortGroupedNFTs(tempGrouped, sortType);
 
   console.log("Sorted grouped NFTs:", sortedGrouped);
   const groupedNFTs = Object.fromEntries(sortedGrouped);
@@ -124,10 +152,10 @@ const getCreatorIdentifier = (nft: NFTAsset): string => {
       .replace(/\/$/, "");
   }
   const artistAttribute = nft.content.metadata.attributes?.find(
-    (attr) => (attr.trait_type || attr.traitType)?.toLowerCase() === "artist"
+    (attr) => attr.trait_type?.toLowerCase() === "artist"
   );
   if (artistAttribute?.value) return artistAttribute.value;
-  if (nft.compression?.creator_hash) return nft.compression.creator_hash;
+  if (nft.compression?.leaf_id) return nft.compression.leaf_id;
   if (nft.content.metadata.symbol) return nft.content.metadata.symbol;
   return nft.authorities?.[0]?.address || "Unknown";
 };

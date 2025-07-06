@@ -3,6 +3,8 @@ import { NFTAsset } from "@/utils/helius";
 import NFTModal from "@/components/NFTModal";
 import Image from "next/image";
 import { calculateSize } from "@/utils/zoomUtils";
+import { getImageUrl } from "@/utils/loadNFTs";
+import { ZoomLevel } from "@/types";
 
 interface View3Props {
   nfts: { [symbol: string]: NFTAsset[] };
@@ -62,12 +64,12 @@ const View2: React.FC<View3Props> = ({
   };
 
   const getImageSrc = (nft: NFTAsset): string => {
-    return (
+    const imageUrl =
       nft.content.links?.image ||
       nft.content.metadata?.image ||
       nft.content.json_uri ||
-      ""
-    );
+      "";
+    return getImageUrl(imageUrl);
   };
 
   const getTitleMaxWidth = (nftCount: number): string => {
@@ -156,7 +158,6 @@ const View2: React.FC<View3Props> = ({
           creator={selectedCreator}
           initialPosition={clickPosition}
           initialIndex={selectedIndex}
-          currentIndex={selectedIndex}
         />
       )}
     </div>

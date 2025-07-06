@@ -1,20 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { loadNFTs } from "@/utils/loadNFTs";
+import { loadNFTs, sortGroupedNFTs } from "@/utils/loadNFTs";
 import Header from "@/components/Header";
 import LoadingPopup from "@/components/LoadingPopup";
 import { NFTAsset } from "@/utils/helius";
 import View1 from "@/components/View1";
 import View2 from "@/components/View2";
 import View3 from "@/components/View3";
-import { ViewMode } from "@/types/index";
+import { ViewMode, ZoomLevel } from "@/types/index";
 
 interface GroupedNFTs {
   [symbol: string]: NFTAsset[];
 }
-
-type ZoomLevel = "small" | "normal" | "big" | "mega";
 
 export default function Home() {
   const [nfts, setNfts] = useState<GroupedNFTs>({});
@@ -69,20 +67,7 @@ export default function Home() {
         );
 
         // Sort the grouped NFTs based on the sortType
-        const sortedGroupedNFTs = Object.entries(groupedNFTs).sort(
-          ([creatorA, nftsA], [creatorB, nftsB]) => {
-            if (sortType === "quantityDesc") {
-              return nftsB.length - nftsA.length;
-            } else if (sortType === "quantityAsc") {
-              return nftsA.length - nftsB.length;
-            } else if (sortType === "nameAsc") {
-              return creatorA.localeCompare(creatorB);
-            } else if (sortType === "nameDesc") {
-              return creatorB.localeCompare(creatorA);
-            }
-            return 0;
-          }
-        );
+        const sortedGroupedNFTs = sortGroupedNFTs(groupedNFTs, sortType);
 
         setNfts(Object.fromEntries(sortedGroupedNFTs));
       } catch (error) {
@@ -201,17 +186,7 @@ export default function Home() {
         zoomLevel={zoomLevel}
         onZoomChange={handleZoomChange}
       />
-      <div className="p-4">
-        {renderCurrentView()}
-
-        {viewMode === "4" && (
-          <View4
-            nfts={nfts}
-            openSymbols={openSymbols}
-            toggleSymbol={toggleSymbol}
-          />
-        )}
-      </div>
+      <div className="p-4">{renderCurrentView()}</div>
     </div>
   );
 }

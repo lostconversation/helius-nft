@@ -3,15 +3,17 @@ import { NFTAsset } from "@/utils/helius";
 import NFTModal from "@/components/NFTModal";
 import Image from "next/image";
 import { calculateSize } from "@/utils/zoomUtils";
+import { getImageUrl } from "@/utils/loadNFTs";
+import { ZoomLevel } from "@/types";
 
-interface View4Props {
+interface View3Props {
   nfts: { [symbol: string]: NFTAsset[] };
   openSymbols: Set<string>;
   toggleSymbol: (symbol: string) => void;
   zoomLevel: ZoomLevel;
 }
 
-const View3: React.FC<View4Props> = ({
+const View3: React.FC<View3Props> = ({
   nfts,
   openSymbols,
   toggleSymbol,
@@ -50,12 +52,12 @@ const View3: React.FC<View4Props> = ({
   };
 
   const getImageSrc = (nft: NFTAsset): string => {
-    return (
+    const imageUrl =
       nft.content.links?.image ||
       nft.content.metadata?.image ||
       nft.content.json_uri ||
-      ""
-    );
+      "";
+    return getImageUrl(imageUrl);
   };
 
   const renderPreviewTile = (nfts: NFTAsset[], creator: string) => {
@@ -136,7 +138,6 @@ const View3: React.FC<View4Props> = ({
           creator={selectedCreator}
           initialPosition={clickPosition}
           initialIndex={selectedIndex}
-          currentIndex={selectedIndex}
         />
       )}
     </div>

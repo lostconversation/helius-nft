@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { NFTAsset } from "@/utils/helius";
-import { motion, AnimatePresence } from "framer-motion";
 import NFTMetadata from "./NFTMetadata";
+import { getImageUrl } from "@/utils/loadNFTs";
 
 interface NFTModalProps {
   isOpen: boolean;
@@ -57,11 +57,11 @@ const NFTModal: React.FC<NFTModalProps> = ({
   if (!isOpen) return null;
 
   const getImageSrc = (index: number) => {
-    return (
+    const imageUrl =
       nfts[index].content.links?.image ||
       nfts[index].content.metadata?.image ||
-      nfts[index].content.json_uri
-    );
+      nfts[index].content.json_uri;
+    return getImageUrl(imageUrl || "");
   };
 
   return (

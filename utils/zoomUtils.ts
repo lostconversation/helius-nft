@@ -1,4 +1,4 @@
-type ZoomLevel = "small" | "normal" | "big" | "mega";
+import { ZoomLevel } from "@/types";
 
 export const getZoomMultiplier = (zoomLevel: ZoomLevel): number => {
   switch (zoomLevel) {

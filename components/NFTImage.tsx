@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useState } from "react";
+import { getImageUrl } from "@/utils/loadNFTs";
 
 interface NFTImageProps {
   src: string;
@@ -21,7 +22,7 @@ export function NFTImage({
     <div className="relative h-64 mb-4 bg-gray-100 rounded-lg overflow-hidden">
       {!isError ? (
         <Image
-          src={src}
+          src={getImageUrl(src)}
           alt={alt}
           width={width}
           height={height}
