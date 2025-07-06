@@ -20,9 +20,7 @@ export default function Home() {
   const [nfts, setNfts] = useState<GroupedNFTs>({});
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [address, setAddress] = useState(
-    "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC"
-  );
+  const [address, setAddress] = useState("");
   const [viewType, setViewType] = useState<"created" | "owned">("owned");
   const [openSymbols, setOpenSymbols] = useState<Set<string>>(new Set());
   const [sortType, setSortType] = useState<
@@ -32,7 +30,7 @@ export default function Home() {
   const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
   const [typeFilter, setTypeFilter] = useState<
     "all" | "drip" | "@" | "youtu" | "???" | "spam"
-  >("youtu");
+  >("drip");
   const [quantityFilter, setQuantityFilter] = useState<"all" | ">3" | "1">(
     "all"
   );
@@ -41,12 +39,13 @@ export default function Home() {
   >("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [additionalAddresses] = useState([
-    "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC",
-    "HQA4k1mrf8gDMd2GK1JYV2Sgm6kghMSsDTJ1zyAHGMQr",
-    "5hWu757purMHhha9THytqkNgv5Cqbim4ossod2PBUJwM",
+    process.env.NEXT_PUBLIC_ADDRESS_1 || "",
+    process.env.NEXT_PUBLIC_ADDRESS_2 || "",
+    process.env.NEXT_PUBLIC_ADDRESS_3 || "",
   ]);
   const [viewMode, setViewMode] = useState<ViewMode>("1");
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("normal");
+  const [loadTrigger, setLoadTrigger] = useState(0);
 
   const handleInspectorFilterChange = (
     filter: "all" | "animations" | "immutable" | "cNFT"
@@ -56,6 +55,8 @@ export default function Home() {
 
   useEffect(() => {
     const fetchNFTs = async () => {
+      if (!address) return;
+
       setLoading(true);
       try {
         const groupedNFTs = await loadNFTs(
@@ -92,7 +93,7 @@ export default function Home() {
     };
 
     fetchNFTs();
-  }, [address, viewType, sortType, typeFilter, quantityFilter]);
+  }, [address, viewType, sortType, typeFilter, quantityFilter, loadTrigger]);
 
   const toggleSymbol = (symbol: string) => {
     setOpenSymbols((prev) => {
@@ -136,6 +137,13 @@ export default function Home() {
 
   const handleZoomChange = (newLevel: ZoomLevel) => {
     setZoomLevel(newLevel);
+  };
+
+  const handleLoadNFTs = () => {
+    if (address) {
+      // Trigger the useEffect by incrementing the load trigger
+      setLoadTrigger((prev) => prev + 1);
+    }
   };
 
   const renderCurrentView = () => {
@@ -184,14 +192,9 @@ export default function Home() {
         setSortType={setSortType}
         typeFilter={typeFilter}
         setTypeFilter={setTypeFilter}
-        quantityFilter={quantityFilter}
-        setQuantityFilter={setQuantityFilter}
-        layoutMode={layoutMode}
-        setLayoutMode={setLayoutMode}
-        displayMode={displayMode}
-        setDisplayMode={setDisplayMode}
         inspectorFilter={inspectorFilter}
         handleInspectorFilterChange={handleInspectorFilterChange}
+        loadNFTs={handleLoadNFTs}
         additionalAddresses={additionalAddresses}
         viewMode={viewMode}
         setViewMode={setViewMode}

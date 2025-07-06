@@ -1,5 +1,6 @@
 import React from "react";
 import ZoomControl from "./ZoomControl";
+import { ZoomLevel } from "@/types";
 
 interface HeaderProps {
   address: string;
@@ -92,8 +93,20 @@ const Header: React.FC<HeaderProps> = ({
                   GO
                 </button>
               </div>
-              <div className="text-[10px] text-gray-500">
-                {additionalAddresses.join(", ")}
+              <div className="flex space-x-2 mt-1">
+                {additionalAddresses.map((addr, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setAddress(addr);
+                      // Small delay to ensure address is set before triggering load
+                      setTimeout(() => loadNFTs(), 10);
+                    }}
+                    className="px-2 py-1 text-xs bg-gray-600 text-gray-300 hover:bg-gray-500 rounded"
+                  >
+                    Wallet Test {index + 1}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
