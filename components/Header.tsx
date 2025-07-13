@@ -45,6 +45,11 @@ const Header: React.FC<HeaderProps> = ({
   zoomLevel,
   onZoomChange,
 }) => {
+  // Function to truncate address for display
+  const truncateAddress = (addr: string): string => {
+    if (addr.length <= 8) return addr;
+    return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+  };
   return (
     <header className="sticky top-0 bg-gray-800 p-4 shadow-md z-10">
       <div className="flex flex-col space-y-2">
@@ -82,9 +87,10 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
                 <input
                   type="text"
-                  value={address}
+                  value={address ? truncateAddress(address) : ""}
                   onChange={(e) => setAddress(e.target.value)}
                   className="flex-grow px-3 py-1 bg-gray-600 text-gray-200 rounded-l-lg"
+                  placeholder="Enter wallet address..."
                 />
                 <button
                   onClick={loadNFTs}
