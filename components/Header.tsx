@@ -25,6 +25,7 @@ interface HeaderProps {
   setViewMode: (viewMode: "1" | "2" | "3") => void;
   zoomLevel: ZoomLevel;
   onZoomChange: (newLevel: ZoomLevel) => void;
+  nfts: { [key: string]: any[] };
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -44,6 +45,7 @@ const Header: React.FC<HeaderProps> = ({
   setViewMode,
   zoomLevel,
   onZoomChange,
+  nfts,
 }) => {
   // Function to truncate address for display
   const truncateAddress = (addr: string): string => {
@@ -161,9 +163,32 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* ARTIST Row - Centered with 3 sections */}
+        {/* ARTIST Row - Centered with 5 sections */}
         <div className="flex justify-center">
-          <div className="flex space-x-8">
+          <div className="flex space-x-6">
+            {/* Stats Section */}
+            <div className="flex flex-col space-y-1">
+              <span className="text-xs text-gray-500 text-center">&nbsp;</span>
+              <div
+                className="bg-gray-700 px-4 py-2 rounded-lg min-w-[200px] flex items-center justify-center"
+                style={{ minHeight: "48px" }}
+              >
+                <div className="flex space-x-4 text-xs text-gray-400">
+                  <span>NFTs: {Object.values(nfts).flat().length}</span>
+                  <span>Artists: {Object.keys(nfts).length}</span>
+                  <span>
+                    Videos:{" "}
+                    {
+                      Object.values(nfts)
+                        .flat()
+                        .filter((nft) => nft.content.links?.animation_url)
+                        .length
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* ORDER Section */}
             <div className="flex flex-col space-y-1">
               <span className="text-xs text-gray-500 text-center">ORDER</span>

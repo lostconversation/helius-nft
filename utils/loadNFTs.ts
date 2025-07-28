@@ -26,7 +26,7 @@ export function getImageUrl(url: string): string {
   return url;
 }
 
-const CACHE_KEY_PREFIX = "nfts_cache_";
+const CACHE_KEY_PREFIX = "nft_";
 
 // Shared sorting function
 export const sortGroupedNFTs = (
@@ -40,9 +40,27 @@ export const sortGroupedNFTs = (
       case "quantityAsc":
         return aValue.length - bValue.length;
       case "nameAsc":
-        return aKey.localeCompare(bKey);
+        // Check if keys start with numbers
+        const aStartsWithNumber = /^\d/.test(aKey);
+        const bStartsWithNumber = /^\d/.test(bKey);
+
+        // If both start with numbers or both don't, use normal comparison
+        if (aStartsWithNumber === bStartsWithNumber) {
+          return aKey.localeCompare(bKey);
+        }
+        // Put numbers at the end
+        return aStartsWithNumber ? 1 : -1;
       case "nameDesc":
-        return bKey.localeCompare(aKey);
+        // Check if keys start with numbers
+        const aStartsWithNumberDesc = /^\d/.test(aKey);
+        const bStartsWithNumberDesc = /^\d/.test(bKey);
+
+        // If both start with numbers or both don't, use normal comparison
+        if (aStartsWithNumberDesc === bStartsWithNumberDesc) {
+          return bKey.localeCompare(aKey);
+        }
+        // Put numbers at the end
+        return aStartsWithNumberDesc ? 1 : -1;
       default:
         return 0;
     }
@@ -57,7 +75,7 @@ export const loadNFTs = async (
   quantityFilter: "all" | ">3" | "1",
   setProgress: (progress: number) => void
 ): Promise<GroupedNFTs> => {
-  const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}_${typeFilter}`;
+  const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}_${typeFilter}_${sortType}`;
 
   // Check if cached data exists
   const cachedData = localStorage.getItem(cacheKey);
@@ -83,10 +101,12 @@ export const loadNFTs = async (
 
     // Type filter
     if (typeFilter !== "all") {
-      const isDrip = creatorId.startsWith("DRIP:");
-      const isAtSymbol = creatorId.startsWith("@");
-      const isYoutu = creatorId.toLowerCase().startsWith("youtu");
-      const isLongName = creatorId.length >= 20;
+      // Ensure creatorId is a string
+      const creatorIdStr = String(creatorId);
+      const isDrip = creatorIdStr.startsWith("DRIP:");
+      const isAtSymbol = creatorIdStr.startsWith("@");
+      const isYoutu = creatorIdStr.toLowerCase().startsWith("youtu");
+      const isLongName = creatorIdStr.length >= 20;
 
       if (
         (typeFilter === "drip" && !isDrip) ||
@@ -133,7 +153,24 @@ export const loadNFTs = async (
   const groupedNFTs = Object.fromEntries(sortedGrouped);
 
   // Cache the result
-  localStorage.setItem(cacheKey, JSON.stringify(groupedNFTs));
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify(groupedNFTs));
+  } catch (error) {
+    console.warn("Failed to cache NFTs data:", error);
+    // If localStorage is full, try to clear old cache entries
+    try {
+      const keys = Object.keys(localStorage);
+      const cacheKeys = keys.filter((key) => key.startsWith(CACHE_KEY_PREFIX));
+      if (cacheKeys.length > 10) {
+        // Remove oldest cache entries
+        cacheKeys.slice(0, 5).forEach((key) => localStorage.removeItem(key));
+        // Try to cache again
+        localStorage.setItem(cacheKey, JSON.stringify(groupedNFTs));
+      }
+    } catch (clearError) {
+      console.warn("Failed to clear cache:", clearError);
+    }
+  }
 
   return groupedNFTs;
 };

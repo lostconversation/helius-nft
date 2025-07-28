@@ -41,7 +41,7 @@ export default function Home() {
     process.env.NEXT_PUBLIC_ADDRESS_2 || "",
     process.env.NEXT_PUBLIC_ADDRESS_3 || "",
   ]);
-  const [viewMode, setViewMode] = useState<ViewMode>("1");
+  const [viewMode, setViewMode] = useState<ViewMode>("3");
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("normal");
   const [loadTrigger, setLoadTrigger] = useState(0);
 
@@ -185,6 +185,7 @@ export default function Home() {
         setViewMode={setViewMode}
         zoomLevel={zoomLevel}
         onZoomChange={handleZoomChange}
+        nfts={filterNFTs(nfts)}
       />
       <div className="p-4">{renderCurrentView()}</div>
     </div>
