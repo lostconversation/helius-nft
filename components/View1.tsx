@@ -3,7 +3,7 @@ import { NFTAsset } from "@/utils/helius";
 import NFTModal from "@/components/NFTModal";
 import Image from "next/image";
 import { calculateSize } from "@/utils/zoomUtils";
-import { getImageUrl } from "@/utils/loadNFTs";
+import { getImageUrl, getDisplayName } from "@/utils/loadNFTs";
 import { ZoomLevel } from "@/types";
 
 interface View1Props {
@@ -105,7 +105,7 @@ const View1: React.FC<View1Props> = ({
             onClick={(e) => handleTileClick(creatorNFTs, creator, e)}
           >
             <h2 className="text-xl font-semibold text-gray-300 title-overflow">
-              {creator}
+              {getDisplayName(creator)}
             </h2>
             <p className="text-gray-500">
               {creatorNFTs.length} {creatorNFTs.length === 1 ? "NFT" : "NFTs"}

@@ -26,7 +26,14 @@ export function getImageUrl(url: string): string {
   return url;
 }
 
-const CACHE_KEY_PREFIX = "nft_";
+export function getDisplayName(creatorId: string): string {
+  if (creatorId.startsWith("DRIP: ")) {
+    return creatorId.replace("DRIP: ", "");
+  }
+  return creatorId;
+}
+
+const CACHE_KEY_PREFIX = "nft_v3_";
 
 // Shared sorting function
 export const sortGroupedNFTs = (
@@ -75,7 +82,7 @@ export const loadNFTs = async (
   quantityFilter: "all" | ">3" | "1",
   setProgress: (progress: number) => void
 ): Promise<GroupedNFTs> => {
-  const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}_${typeFilter}_${sortType}`;
+  const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}_${typeFilter}`;
 
   // Check if cached data exists
   const cachedData = localStorage.getItem(cacheKey);
@@ -112,11 +119,19 @@ export const loadNFTs = async (
         (typeFilter === "drip" && !isDrip) ||
         (typeFilter === "@" && !isAtSymbol) ||
         (typeFilter === "youtu" && !isYoutu) ||
-        (typeFilter === "???" && !isLongName) ||
-        (typeFilter === "spam" &&
-          (isDrip || isAtSymbol || isYoutu || isLongName))
+        (typeFilter === "???" && (isDrip || isAtSymbol || isYoutu))
       ) {
         return false;
+      }
+
+      // Spam filter: show only artists with >10 NFTs that are not known types
+      if (typeFilter === "spam") {
+        const creatorNFTs = fetchedNFTs.filter(
+          (n) => getCreatorIdentifier(n) === creatorId
+        );
+        if (isDrip || isAtSymbol || isYoutu || creatorNFTs.length <= 10) {
+          return false;
+        }
       }
     }
 

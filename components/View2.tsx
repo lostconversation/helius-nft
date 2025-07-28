@@ -3,7 +3,7 @@ import { NFTAsset } from "@/utils/helius";
 import NFTModal from "@/components/NFTModal";
 import Image from "next/image";
 import { calculateSize } from "@/utils/zoomUtils";
-import { getImageUrl } from "@/utils/loadNFTs";
+import { getImageUrl, getDisplayName } from "@/utils/loadNFTs";
 import { ZoomLevel } from "@/types";
 
 interface View2Props {
@@ -94,11 +94,6 @@ const View2: React.FC<View2Props> = ({
             </div>
           );
         })}
-        {remainingCount > 0 && (
-          <div className="absolute bottom-2 right-2 bg-black/50 px-3 py-1.5 rounded-full text-white text-sm font-medium">
-            +{remainingCount}
-          </div>
-        )}
       </div>
     );
   };
@@ -115,11 +110,18 @@ const View2: React.FC<View2Props> = ({
             flexShrink: 0,
           }}
         >
-          <h2 className="text-2xl font-bold text-white mb-4 truncate">
-            {creator}
-          </h2>
-          <div className="relative aspect-square">
-            {renderPreviewTile(creatorNFTs, creator)}
+          <div className="relative">
+            <h2 className="text-2xl font-bold text-white mb-4 truncate">
+              {getDisplayName(creator)}
+            </h2>
+            {creatorNFTs.length > 4 && (
+              <div className="absolute top-0 right-0 bg-black/50 px-3 py-1.5 rounded-full text-white text-sm font-medium">
+                +{creatorNFTs.length - 4}
+              </div>
+            )}
+            <div className="relative aspect-square">
+              {renderPreviewTile(creatorNFTs, creator)}
+            </div>
           </div>
         </div>
       ))}

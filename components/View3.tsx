@@ -3,7 +3,7 @@ import { NFTAsset } from "@/utils/helius";
 import NFTModal from "@/components/NFTModal";
 import Image from "next/image";
 import { calculateSize } from "@/utils/zoomUtils";
-import { getImageUrl } from "@/utils/loadNFTs";
+import { getImageUrl, getDisplayName } from "@/utils/loadNFTs";
 import { ZoomLevel } from "@/types";
 
 interface View3Props {
@@ -106,7 +106,7 @@ const View3: React.FC<View3Props> = ({
               margin: "0 auto 1rem auto",
             }}
           >
-            {creator}
+            {getDisplayName(creator)}
           </h2>
           <div className="relative">
             <div className="flex space-x-4 overflow-x-auto scrollbar-hide pb-2 justify-center">
