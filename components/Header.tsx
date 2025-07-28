@@ -117,11 +117,57 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Side - ARTIST only */}
-          <div className="flex flex-col space-y-1">
-            <span className="text-xs text-gray-500">ARTIST</span>
-            <div className="flex space-x-2 bg-gray-700 p-2 rounded-lg">
-              <div className="flex space-x-0">
+          {/* Right Side - VIEW and ZOOM */}
+          <div className="flex items-center space-x-4">
+            {/* VIEW Section */}
+            <div className="flex flex-col space-y-1">
+              <span className="text-xs text-gray-500">VIEW</span>
+              <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+                <button
+                  onClick={() => setViewMode("1")}
+                  className={`px-3 py-1 rounded-l-lg ${
+                    viewMode === "1"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                  }`}
+                >
+                  1
+                </button>
+                <button
+                  onClick={() => setViewMode("2")}
+                  className={`px-3 py-1 ${
+                    viewMode === "2"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                  }`}
+                >
+                  2
+                </button>
+                <button
+                  onClick={() => setViewMode("3")}
+                  className={`px-3 py-1 rounded-r-lg ${
+                    viewMode === "3"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                  }`}
+                >
+                  3
+                </button>
+              </div>
+            </div>
+
+            {/* ZOOM Section */}
+            <ZoomControl zoomLevel={zoomLevel} onZoomChange={onZoomChange} />
+          </div>
+        </div>
+
+        {/* ARTIST Row - Centered with 3 sections */}
+        <div className="flex justify-center">
+          <div className="flex space-x-8">
+            {/* ORDER Section */}
+            <div className="flex flex-col space-y-1">
+              <span className="text-xs text-gray-500 text-center">ORDER</span>
+              <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
                 <button
                   onClick={() => setSortType("quantityDesc")}
                   className={`px-3 py-1 rounded-l-lg ${
@@ -163,7 +209,12 @@ const Header: React.FC<HeaderProps> = ({
                   Zyx
                 </button>
               </div>
-              <div className="flex space-x-0">
+            </div>
+
+            {/* ARTIST Section */}
+            <div className="flex flex-col space-y-1">
+              <span className="text-xs text-gray-500 text-center">ARTIST</span>
+              <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
                 <button
                   onClick={() => setTypeFilter("all")}
                   className={`px-3 py-1 rounded-l-lg ${
@@ -226,98 +277,52 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* VIEW, ZOOM, NFT Row */}
-        <div className="flex justify-between">
-          {/* VIEW and ZOOM group */}
-          <div className="flex space-x-4">
-            {/* VIEW Section */}
+            {/* NFT Section */}
             <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500">VIEW</span>
+              <span className="text-xs text-gray-500 text-center">NFT</span>
               <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
                 <button
-                  onClick={() => setViewMode("1")}
+                  onClick={() => handleInspectorFilterChange("all")}
                   className={`px-3 py-1 rounded-l-lg ${
-                    viewMode === "1"
+                    inspectorFilter === "all"
                       ? "bg-blue-500 text-white"
                       : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                   }`}
                 >
-                  1
+                  All
                 </button>
                 <button
-                  onClick={() => setViewMode("2")}
+                  onClick={() => handleInspectorFilterChange("animations")}
                   className={`px-3 py-1 ${
-                    viewMode === "2"
+                    inspectorFilter === "animations"
                       ? "bg-blue-500 text-white"
                       : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                   }`}
                 >
-                  2
+                  Animations
                 </button>
                 <button
-                  onClick={() => setViewMode("3")}
-                  className={`px-3 py-1 rounded-r-lg ${
-                    viewMode === "3"
+                  onClick={() => handleInspectorFilterChange("immutable")}
+                  className={`px-3 py-1 ${
+                    inspectorFilter === "immutable"
                       ? "bg-blue-500 text-white"
                       : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                   }`}
                 >
-                  3
+                  Immutable
+                </button>
+                <button
+                  onClick={() => handleInspectorFilterChange("cNFT")}
+                  className={`px-3 py-1 rounded-r-lg ${
+                    inspectorFilter === "cNFT"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                  }`}
+                >
+                  cNFT
                 </button>
               </div>
-            </div>
-
-            {/* ZOOM Section */}
-            <ZoomControl zoomLevel={zoomLevel} onZoomChange={onZoomChange} />
-          </div>
-
-          {/* NFT Section - right aligned */}
-          <div className="flex flex-col space-y-1">
-            <span className="text-xs text-gray-500">NFT</span>
-            <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
-              <button
-                onClick={() => handleInspectorFilterChange("all")}
-                className={`px-3 py-1 rounded-l-lg ${
-                  inspectorFilter === "all"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => handleInspectorFilterChange("animations")}
-                className={`px-3 py-1 ${
-                  inspectorFilter === "animations"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                }`}
-              >
-                Animations
-              </button>
-              <button
-                onClick={() => handleInspectorFilterChange("immutable")}
-                className={`px-3 py-1 ${
-                  inspectorFilter === "immutable"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                }`}
-              >
-                Immutable
-              </button>
-              <button
-                onClick={() => handleInspectorFilterChange("cNFT")}
-                className={`px-3 py-1 rounded-r-lg ${
-                  inspectorFilter === "cNFT"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                }`}
-              >
-                cNFT
-              </button>
             </div>
           </div>
         </div>
