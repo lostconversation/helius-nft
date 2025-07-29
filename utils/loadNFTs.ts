@@ -24,6 +24,21 @@ export function getImageUrl(url: string): string {
     return url.replace("ar://", "https://arweave.net/");
   }
 
+  // For URLs without file extensions, try to add a default image type
+  if (url && !url.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/i)) {
+    // If it's a URL that looks like it should be an image but has no extension,
+    // we'll keep it as is since Next.js should handle it
+    console.log("🖼️ Image URL without extension:", url);
+  }
+
+  // Handle Superteam membership URLs that might redirect
+  if (url.includes("superteam-nft-membership.vercel.app")) {
+    console.log("🖼️ Superteam membership URL detected:", url);
+    // Try to force direct image loading by adding image-specific parameters
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}format=png&direct=true`;
+  }
+
   return url;
 }
 
@@ -33,12 +48,43 @@ export function isDripArtist(creatorId: string): boolean {
   const isDrip = creatorIdStr.startsWith("DRIP:");
   const isAtArtist = creatorIdStr.endsWith(" @");
   const isBase58Drip = creatorIdStr.length >= 40 && !creatorIdStr.includes(" ");
-  const result = isDrip || isAtArtist || isBase58Drip;
+
+  // Additional Drip artists that should get the badge
+  const additionalDripArtists = [
+    "mooar.com",
+    "3.land",
+    "MADhouse",
+    "monmonmon",
+    "Poetonic",
+  ];
+  const isAdditionalDrip = additionalDripArtists.some((artist) =>
+    creatorIdStr.toLowerCase().includes(artist.toLowerCase())
+  );
+
+  // Check for @ artists (Early Drip)
+  const isAtArtistInName = creatorIdStr.includes("@");
+
+  // Hard exclusions - artists that should NEVER be in Drip
+  const dripExclusions = [
+    "blogs.shyft",
+    // Add more exclusions here as needed
+  ];
+  const isExcluded = dripExclusions.some((exclusion) =>
+    creatorIdStr.toLowerCase().includes(exclusion.toLowerCase())
+  );
+
+  const result =
+    (isDrip ||
+      isAtArtist ||
+      isBase58Drip ||
+      isAdditionalDrip ||
+      isAtArtistInName) &&
+    !isExcluded;
 
   // Debug logging for @ artists
   if (creatorIdStr.includes("@")) {
     console.log(
-      `🔍 isDripArtist check: "${creatorIdStr}" -> isDrip: ${isDrip}, isAtArtist: ${isAtArtist}, isBase58: ${isBase58Drip}, result: ${result}`
+      `🔍 isDripArtist check: "${creatorIdStr}" -> isDrip: ${isDrip}, isAtArtist: ${isAtArtist}, isBase58: ${isBase58Drip}, additional: ${isAdditionalDrip}, isAtArtistInName: ${isAtArtistInName}, result: ${result}`
     );
   }
 
@@ -59,6 +105,11 @@ export function getDisplayName(creatorId: string): string {
       nameWithoutAt.charAt(0).toUpperCase() + nameWithoutAt.slice(1); // Capitalize first letter
     return `${capitalizedName} @`;
   }
+  // Handle @ artists that end with " @" - remove the " @" suffix
+  if (creatorId.endsWith(" @")) {
+    const nameWithoutSuffix = creatorId.slice(0, -2); // Remove " @" suffix
+    return nameWithoutSuffix;
+  }
   // Handle base58 names (40+ char without spaces) - truncate to first 4 chars + "..."
   if (creatorId.length >= 40 && !creatorId.includes(" ")) {
     return `${creatorId.slice(0, 4)}...`;
@@ -68,12 +119,7 @@ export function getDisplayName(creatorId: string): string {
     creatorId.includes("Superteam") ||
     creatorId.includes("SMB") ||
     creatorId.includes("Faceless") ||
-    creatorId.includes("mooar.com") ||
-    creatorId.includes("3.land") ||
     creatorId.includes("E3zH") ||
-    creatorId.includes("monmonmon") ||
-    creatorId.includes("MADhouse") ||
-    creatorId.includes("Poetonic") ||
     creatorId.includes("thenetworkstate.com")
   ) {
     return creatorId;
@@ -251,8 +297,13 @@ export const loadNFTs = async (
         !isAtSymbol &&
         !isYoutu &&
         !isLegit &&
-        !isBase58) || // Exclude base58 names from spam
-      isClaim;
+        !isBase58 &&
+        !isDripArtist(creatorIdStr) &&
+        !isLegit) || // Exclude any Drip and Legit artists from spam
+      isClaim ||
+      (nft.content.links?.external_url &&
+        !isDripArtist(creatorIdStr) &&
+        !isLegit); // Include NFTs with external links in spam (but not Drip/Legit)
 
     // Debug: Log filtering decision for first few NFTs
     if (processedNFTs <= 5) {
@@ -281,6 +332,13 @@ export const loadNFTs = async (
           console.log(`✅ Drip Item: "${creatorIdStr}" (isDripArtist: true)`);
         }
 
+        // Additional debug for @ artists
+        if (creatorIdStr.includes("@")) {
+          console.log(
+            `🔍 @ Artist found: "${creatorIdStr}" - isDripArtist: ${shouldIncludeDrip}`
+          );
+        }
+
         return shouldIncludeDrip;
       case "youtu":
         return isYoutu;
@@ -295,7 +353,19 @@ export const loadNFTs = async (
         }
         return isSpam;
       case "???":
-        return !isDrip && !isAtSymbol && !isYoutu && !isLegit && !isSpam;
+        // ??? should exclude Drip artists and those with links should go to spam
+        const hasExternalLink = nft.content.links?.external_url;
+        if (hasExternalLink) {
+          return false; // Don't include in ??? if they have external links
+        }
+        return (
+          !isDrip &&
+          !isAtSymbol &&
+          !isYoutu &&
+          !isLegit &&
+          !isSpam &&
+          !isDripArtist(creatorIdStr)
+        );
       default:
         return true;
     }

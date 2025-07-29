@@ -20,7 +20,7 @@ export const customArtists: CustomArtist[] = [
     name: "Superteam",
     ruleType: "anyContains",
     value: ["superteam", "red hoodie"],
-    exclude: ["SuperteamDAO Loot Box"],
+    exclude: ["SuperteamDAO Loot Box", "Superteam Member NFT"],
   },
   {
     name: "Faceless",
@@ -38,45 +38,14 @@ export const customArtists: CustomArtist[] = [
     value: "SMB Gen3",
   },
   {
-    name: "mooar.com",
-    ruleType: "creatorId",
-    value: "mooar.com",
-  },
-  {
-    name: "3.land",
-    ruleType: "creatorId",
-    value: "3.land",
-  },
-  {
     name: "E3zH...",
     ruleType: "creatorId",
     value: "E3zHh78ujEffBETguxjVnqPP9Ut42BCbbxXkdk9YQjLC",
   },
   {
-    name: "monmonmon",
-    ruleType: "creatorId",
-    value: "monmonmon",
-  },
-  {
-    name: "MADhouse",
-    ruleType: "creatorId",
-    value: "MADhouse",
-  },
-  {
-    name: "Poetonic",
-    ruleType: "creatorId",
-    value: "Poetonic",
-  },
-  {
     name: "thenetworkstate.com",
     ruleType: "creatorId",
     value: "thenetworkstate.com",
-  },
-  // Example of "contains" rule
-  {
-    name: "Solana Ecosystem",
-    ruleType: "nftNameContains",
-    value: "solana",
   },
 ];
 

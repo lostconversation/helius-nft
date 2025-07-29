@@ -12,7 +12,7 @@ const ZoomControl: React.FC<ZoomControlProps> = ({
 }) => {
   return (
     <div className="flex flex-col space-y-1">
-      <span className="text-xs text-gray-500">ZOOM</span>
+      <span className="text-xs text-gray-500 text-center">ZOOM</span>
       <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
         <button
           onClick={() => onZoomChange("small")}
