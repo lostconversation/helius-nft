@@ -11,9 +11,9 @@ interface HeaderProps {
   setSortType: (
     sortType: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
   ) => void;
-  typeFilter: "all" | "drip" | "@" | "youtu" | "???" | "spam";
+  typeFilter: "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam";
   setTypeFilter: (
-    typeFilter: "all" | "drip" | "@" | "youtu" | "???" | "spam"
+    typeFilter: "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam"
   ) => void;
   inspectorFilter: "all" | "animations" | "immutable" | "cNFT";
   handleInspectorFilterChange: (
@@ -279,6 +279,16 @@ const Header: React.FC<HeaderProps> = ({
                   }`}
                 >
                   Youtu
+                </button>
+                <button
+                  onClick={() => setTypeFilter("legit")}
+                  className={`px-3 py-1 ${
+                    typeFilter === "legit"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                  }`}
+                >
+                  Legit
                 </button>
                 <button
                   onClick={() => setTypeFilter("???")}

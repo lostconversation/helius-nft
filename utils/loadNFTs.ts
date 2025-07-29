@@ -1,4 +1,5 @@
 import { fetchNFTsByOwner, NFTAsset } from "@/utils/helius";
+import { isLegitArtist, getLegitArtistName } from "@/utils/legitArtists";
 
 interface GroupedNFTs {
   [symbol: string]: NFTAsset[];
@@ -30,10 +31,27 @@ export function getDisplayName(creatorId: string): string {
   if (creatorId.startsWith("DRIP: ")) {
     return creatorId.replace("DRIP: ", "");
   }
+  if (creatorId.startsWith("LEGIT: ")) {
+    return creatorId.replace("LEGIT: ", "");
+  }
   return creatorId;
 }
 
-const CACHE_KEY_PREFIX = "nft_v3_";
+const CACHE_KEY_PREFIX = "nft_v5_";
+
+// Clear old cache versions
+const clearOldCache = () => {
+  try {
+    const keys = Object.keys(localStorage);
+    const oldCacheKeys = keys.filter(
+      (key) => key.startsWith("nft_") && !key.startsWith(CACHE_KEY_PREFIX)
+    );
+    oldCacheKeys.forEach((key) => localStorage.removeItem(key));
+    console.log(`Cleared ${oldCacheKeys.length} old cache entries`);
+  } catch (error) {
+    console.warn("Failed to clear old cache:", error);
+  }
+};
 
 // Shared sorting function
 export const sortGroupedNFTs = (
@@ -78,17 +96,68 @@ export const loadNFTs = async (
   address: string,
   viewType: "created" | "owned",
   sortType: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc",
-  typeFilter: "all" | "drip" | "@" | "youtu" | "???" | "spam",
+  typeFilter: "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam",
   quantityFilter: "all" | ">3" | "1",
   setProgress: (progress: number) => void
 ): Promise<GroupedNFTs> => {
-  const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}_${typeFilter}`;
+  // Clear old cache versions
+  clearOldCache();
+  const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}`;
 
   // Check if cached data exists
   const cachedData = localStorage.getItem(cacheKey);
   if (cachedData) {
     console.log("Using cached NFTs data");
-    return JSON.parse(cachedData);
+    const cachedDataParsed = JSON.parse(cachedData);
+
+    // Check if cached data is already grouped (old format) or raw array (new format)
+    if (Array.isArray(cachedDataParsed)) {
+      // New format: raw NFT array
+      const rawNFTs = cachedDataParsed;
+
+      // Apply filtering to cached data
+      const filteredNFTs = rawNFTs.filter((nft: any) => {
+        const creatorId = getCreatorIdentifier(nft);
+
+        // Type filter
+        if (typeFilter !== "all") {
+          const creatorIdStr = String(creatorId);
+          const isDrip = creatorIdStr.startsWith("DRIP:");
+          const isAtSymbol = creatorIdStr.startsWith("@");
+          const isYoutu = creatorIdStr.toLowerCase().startsWith("youtu");
+          const isLegit = isLegitArtist(nft);
+
+          if (
+            (typeFilter === "drip" && !isDrip) ||
+            (typeFilter === "@" && !isAtSymbol) ||
+            (typeFilter === "youtu" && !isYoutu) ||
+            (typeFilter === "legit" && !isLegit) ||
+            (typeFilter === "???" &&
+              (isDrip || isAtSymbol || isYoutu || isLegit))
+          ) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      // Group and sort the filtered NFTs
+      const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft: any) => {
+        const creatorId = getCreatorIdentifier(nft);
+        if (!acc[creatorId]) {
+          acc[creatorId] = [];
+        }
+        acc[creatorId].push(nft);
+        return acc;
+      }, {});
+
+      const sortedGrouped = sortGroupedNFTs(tempGrouped, sortType);
+      return Object.fromEntries(sortedGrouped);
+    } else {
+      // Old format: already grouped data, return as-is
+      return cachedDataParsed;
+    }
   }
 
   if (!address) return {};
@@ -104,6 +173,8 @@ export const loadNFTs = async (
     loadedNFTs++;
     setProgress(Math.floor((loadedNFTs / totalNFTs) * 100));
 
+    console.log("FILTERING NFT - typeFilter:", typeFilter);
+
     const creatorId = getCreatorIdentifier(nft);
 
     // Type filter
@@ -115,13 +186,28 @@ export const loadNFTs = async (
       const isYoutu = creatorIdStr.toLowerCase().startsWith("youtu");
       const isLongName = creatorIdStr.length >= 20;
 
+      // Check if this is a legit artist
+      const isLegit = isLegitArtist(nft);
+
+      // Debug: log NFT names to see what they actually are
+
       if (
         (typeFilter === "drip" && !isDrip) ||
         (typeFilter === "@" && !isAtSymbol) ||
         (typeFilter === "youtu" && !isYoutu) ||
-        (typeFilter === "???" && (isDrip || isAtSymbol || isYoutu))
+        (typeFilter === "legit" && !isLegit) ||
+        (typeFilter === "???" && (isDrip || isAtSymbol || isYoutu || isLegit))
       ) {
         return false;
+      }
+
+      // Debug for legit filter
+      if (typeFilter === "legit") {
+        console.log("Legit filter check:", {
+          nftName: nft.content.metadata.name,
+          isLegit,
+          description: nft.content.metadata.description?.substring(0, 100),
+        });
       }
 
       // Spam filter: show only artists with >10 NFTs that are not known types
@@ -129,7 +215,13 @@ export const loadNFTs = async (
         const creatorNFTs = fetchedNFTs.filter(
           (n) => getCreatorIdentifier(n) === creatorId
         );
-        if (isDrip || isAtSymbol || isYoutu || creatorNFTs.length <= 10) {
+        if (
+          isDrip ||
+          isAtSymbol ||
+          isYoutu ||
+          isLegit ||
+          creatorNFTs.length <= 10
+        ) {
           return false;
         }
       }
@@ -167,9 +259,9 @@ export const loadNFTs = async (
   console.log("Sorted grouped NFTs:", sortedGrouped);
   const groupedNFTs = Object.fromEntries(sortedGrouped);
 
-  // Cache the result
+  // Cache the raw NFT data (before filtering)
   try {
-    localStorage.setItem(cacheKey, JSON.stringify(groupedNFTs));
+    localStorage.setItem(cacheKey, JSON.stringify(fetchedNFTs));
   } catch (error) {
     console.warn("Failed to cache NFTs data:", error);
     // If localStorage is full, try to clear old cache entries
@@ -191,6 +283,13 @@ export const loadNFTs = async (
 };
 
 const getCreatorIdentifier = (nft: NFTAsset): string => {
+  // Check if this is a legit artist first
+  const nftDisplayName = nft.content.metadata.name;
+  const legitArtistName = getLegitArtistName(nftDisplayName);
+  if (legitArtistName) {
+    return `LEGIT: ${legitArtistName}`;
+  }
+
   const dripHausUrl = nft.content.links?.external_url;
   const isDripProject =
     dripHausUrl?.startsWith("https://drip.haus/") ||
