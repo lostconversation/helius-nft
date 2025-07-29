@@ -16,6 +16,9 @@ interface GroupedNFTs {
 
 export default function Home() {
   const [nfts, setNfts] = useState<GroupedNFTs>({});
+  const [allCategories, setAllCategories] = useState<{
+    [key: string]: GroupedNFTs;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [address, setAddress] = useState("");
@@ -27,8 +30,8 @@ export default function Home() {
   const [displayMode, setDisplayMode] = useState<"grid" | "data">("grid");
   const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
   const [typeFilter, setTypeFilter] = useState<
-    "all" | "drip" | "@" | "youtu" | "???" | "spam"
-  >("drip");
+    "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam"
+  >("legit");
   const [quantityFilter, setQuantityFilter] = useState<"all" | ">3" | "1">(
     "all"
   );
@@ -51,25 +54,62 @@ export default function Home() {
     setInspectorFilter(filter);
   };
 
+  // Load ALL categories once when wallet is entered
   useEffect(() => {
-    const fetchNFTs = async () => {
+    const loadAllCategories = async () => {
       if (!address) return;
 
       setLoading(true);
       try {
-        const groupedNFTs = await loadNFTs(
-          address,
-          viewType,
-          sortType,
-          typeFilter,
-          quantityFilter,
-          setProgress
-        );
+        console.log("🚀 Loading ALL categories for wallet:", address);
 
-        // Sort the grouped NFTs based on the sortType
-        const sortedGroupedNFTs = sortGroupedNFTs(groupedNFTs, sortType);
+        // Load OG tags first (fast)
+        const ogCategories = ["all", "drip", "@", "youtu"];
+        const allCategoriesData: any = {};
 
-        setNfts(Object.fromEntries(sortedGroupedNFTs));
+        console.log("⚡ Loading OG tags (fast)...");
+        for (let i = 0; i < ogCategories.length; i++) {
+          const category = ogCategories[i];
+          setProgress(Math.floor((i / ogCategories.length) * 40) + 10);
+          console.log(`📥 Loading ${category}...`);
+
+          const result = await loadNFTs(
+            address,
+            viewType,
+            "quantityDesc", // Always use same sort for fetching
+            category as any,
+            quantityFilter,
+            () => {} // Don't update progress for individual loads
+          );
+
+          allCategoriesData[category] = result;
+        }
+
+        // Load custom artists (slow)
+        const customCategories = ["legit", "spam", "???"];
+        console.log("🔍 Loading custom artists (slow scan)...");
+        for (let i = 0; i < customCategories.length; i++) {
+          const category = customCategories[i];
+          setProgress(50 + Math.floor((i / customCategories.length) * 40));
+          console.log(`🔍 Scanning ${category}...`);
+
+          const result = await loadNFTs(
+            address,
+            viewType,
+            "quantityDesc", // Always use same sort for fetching
+            category as any,
+            quantityFilter,
+            () => {} // Don't update progress for individual loads
+          );
+
+          allCategoriesData[category] = result;
+        }
+
+        setAllCategories(allCategoriesData);
+        setNfts(allCategoriesData.legit); // Start with legit
+        setProgress(100);
+
+        console.log("✅ All categories loaded and cached");
       } catch (error) {
         console.error("Error loading NFTs:", error);
       } finally {
@@ -77,8 +117,41 @@ export default function Home() {
       }
     };
 
-    fetchNFTs();
-  }, [address, viewType, sortType, typeFilter, quantityFilter, loadTrigger]);
+    loadAllCategories();
+  }, [address, viewType, quantityFilter, loadTrigger]); // Removed sortType from dependencies
+
+  // Handle filter changes instantly (no loading)
+  useEffect(() => {
+    if (!allCategories) return;
+
+    console.log("🔄 Switching to filter:", typeFilter);
+
+    // Map filter names to category keys
+    const categoryMap: { [key: string]: string } = {
+      all: "all",
+      drip: "drip",
+      "@": "at",
+      youtu: "youtu",
+      legit: "legit",
+      spam: "spam",
+      "???": "???",
+    };
+
+    const categoryKey = categoryMap[typeFilter];
+    if (categoryKey && allCategories[categoryKey]) {
+      // Apply sorting on the client side
+      const sortedGrouped = sortGroupedNFTs(
+        allCategories[categoryKey],
+        sortType
+      );
+      setNfts(Object.fromEntries(sortedGrouped));
+      console.log(
+        `✅ Switched to ${typeFilter}: ${
+          Object.keys(allCategories[categoryKey]).length
+        } artists`
+      );
+    }
+  }, [typeFilter, allCategories, sortType]); // Added sortType back for client-side sorting
 
   const toggleSymbol = (symbol: string) => {
     setOpenSymbols((prev) => {
