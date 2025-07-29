@@ -124,7 +124,7 @@ export default function Home() {
   useEffect(() => {
     if (!allCategories) return;
 
-    console.log("🔄 Switching to filter:", typeFilter);
+    console.log("🔄 Switching to filter:", typeFilter, "with sort:", sortType);
 
     // Map filter names to category keys
     const categoryMap: { [key: string]: string } = {
@@ -139,16 +139,27 @@ export default function Home() {
 
     const categoryKey = categoryMap[typeFilter];
     if (categoryKey && allCategories[categoryKey]) {
+      console.log(
+        `📊 Found ${
+          Object.keys(allCategories[categoryKey]).length
+        } artists for ${typeFilter}`
+      );
+
       // Apply sorting on the client side
       const sortedGrouped = sortGroupedNFTs(
         allCategories[categoryKey],
         sortType
       );
       setNfts(Object.fromEntries(sortedGrouped));
+
       console.log(
         `✅ Switched to ${typeFilter}: ${
           Object.keys(allCategories[categoryKey]).length
-        } artists`
+        } artists (sorted by ${sortType})`
+      );
+    } else {
+      console.log(
+        `❌ No data found for ${typeFilter} (categoryKey: ${categoryKey})`
       );
     }
   }, [typeFilter, allCategories, sortType]); // Added sortType back for client-side sorting

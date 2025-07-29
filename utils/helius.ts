@@ -52,6 +52,11 @@ export interface NFTAsset {
     compressed: boolean;
     leaf_id: string;
     tree_id: string;
+    creator_hash?: string;
+    data_hash?: string;
+    asset_hash?: string;
+    tree?: string;
+    seq?: number;
   };
 }
 

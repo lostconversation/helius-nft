@@ -58,38 +58,70 @@ export const sortGroupedNFTs = (
   groupedNFTs: GroupedNFTs,
   sortType: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
 ) => {
-  return Object.entries(groupedNFTs).sort(([aKey, aValue], [bKey, bValue]) => {
-    switch (sortType) {
-      case "quantityDesc":
-        return bValue.length - aValue.length;
-      case "quantityAsc":
-        return aValue.length - bValue.length;
-      case "nameAsc":
-        // Check if keys start with numbers
-        const aStartsWithNumber = /^\d/.test(aKey);
-        const bStartsWithNumber = /^\d/.test(bKey);
+  console.log(
+    `🔀 Sorting ${Object.keys(groupedNFTs).length} artists by ${sortType}`
+  );
 
-        // If both start with numbers or both don't, use normal comparison
-        if (aStartsWithNumber === bStartsWithNumber) {
+  // Debug: Show first few artist names
+  const artistNames = Object.keys(groupedNFTs);
+  console.log("📋 Sample artist names:", artistNames.slice(0, 10));
+
+  const sorted = Object.entries(groupedNFTs).sort(
+    ([aKey, aValue], [bKey, bValue]) => {
+      switch (sortType) {
+        case "quantityDesc":
+          return bValue.length - aValue.length;
+        case "quantityAsc":
+          return aValue.length - bValue.length;
+        case "nameAsc":
+          // Check if keys start with numbers
+          const aStartsWithNumber = /^\d/.test(aKey);
+          const bStartsWithNumber = /^\d/.test(bKey);
+
+          // If both start with numbers, sort them alphabetically (as strings)
+          if (aStartsWithNumber && bStartsWithNumber) {
+            return aKey.localeCompare(bKey);
+          }
+          // If only one starts with number, put numbers at the very end
+          if (aStartsWithNumber && !bStartsWithNumber) {
+            return 1; // a goes after b
+          }
+          if (!aStartsWithNumber && bStartsWithNumber) {
+            return -1; // a goes before b
+          }
+          // Both are letters, use normal alphabetical comparison
           return aKey.localeCompare(bKey);
-        }
-        // Put numbers at the end
-        return aStartsWithNumber ? 1 : -1;
-      case "nameDesc":
-        // Check if keys start with numbers
-        const aStartsWithNumberDesc = /^\d/.test(aKey);
-        const bStartsWithNumberDesc = /^\d/.test(bKey);
+        case "nameDesc":
+          // Check if keys start with numbers
+          const aStartsWithNumberDesc = /^\d/.test(aKey);
+          const bStartsWithNumberDesc = /^\d/.test(bKey);
 
-        // If both start with numbers or both don't, use normal comparison
-        if (aStartsWithNumberDesc === bStartsWithNumberDesc) {
+          // If both start with numbers, sort them alphabetically (as strings, reverse)
+          if (aStartsWithNumberDesc && bStartsWithNumberDesc) {
+            return bKey.localeCompare(aKey);
+          }
+          // If only one starts with number, put numbers at the very end
+          if (aStartsWithNumberDesc && !bStartsWithNumberDesc) {
+            return 1; // a goes after b
+          }
+          if (!aStartsWithNumberDesc && bStartsWithNumberDesc) {
+            return -1; // a goes before b
+          }
+          // Both are letters, use reverse alphabetical comparison
           return bKey.localeCompare(aKey);
-        }
-        // Put numbers at the end
-        return aStartsWithNumberDesc ? 1 : -1;
-      default:
-        return 0;
+        default:
+          return 0;
+      }
     }
-  });
+  );
+
+  // Debug: Show the first 10 sorted results
+  console.log(
+    "📊 First 10 sorted results:",
+    sorted.slice(0, 10).map(([key]) => key)
+  );
+
+  return sorted;
 };
 
 export const loadNFTs = async (
@@ -243,7 +275,14 @@ export const getCreatorIdentifier = (nft: NFTAsset): string => {
     (attr) => attr.trait_type?.toLowerCase() === "artist"
   );
   if (artistAttribute?.value) return artistAttribute.value;
-  if (nft.compression?.leaf_id) return nft.compression.leaf_id;
   if (nft.content.metadata.symbol) return nft.content.metadata.symbol;
-  return nft.authorities?.[0]?.address || "Unknown";
+  if (nft.authorities?.[0]?.address) return nft.authorities[0].address;
+
+  // Use creator_hash as fallback instead of leaf_id
+  if (nft.compression?.creator_hash) {
+    const hash = nft.compression.creator_hash;
+    return `${hash.slice(0, 4)}...`;
+  }
+
+  return "Unknown";
 };
