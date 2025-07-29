@@ -27,6 +27,24 @@ export function getImageUrl(url: string): string {
   return url;
 }
 
+// Helper function to determine if an artist is a Drip artist
+export function isDripArtist(creatorId: string): boolean {
+  const creatorIdStr = String(creatorId);
+  const isDrip = creatorIdStr.startsWith("DRIP:");
+  const isAtArtist = creatorIdStr.endsWith(" @");
+  const isBase58Drip = creatorIdStr.length >= 40 && !creatorIdStr.includes(" ");
+  const result = isDrip || isAtArtist || isBase58Drip;
+
+  // Debug logging for @ artists
+  if (creatorIdStr.includes("@")) {
+    console.log(
+      `🔍 isDripArtist check: "${creatorIdStr}" -> isDrip: ${isDrip}, isAtArtist: ${isAtArtist}, isBase58: ${isBase58Drip}, result: ${result}`
+    );
+  }
+
+  return result;
+}
+
 export function getDisplayName(creatorId: string): string {
   if (creatorId.startsWith("DRIP: ")) {
     return creatorId.replace("DRIP: ", "");
@@ -34,10 +52,36 @@ export function getDisplayName(creatorId: string): string {
   if (creatorId.startsWith("LEGIT: ")) {
     return creatorId.replace("LEGIT: ", "");
   }
+  // Handle @ artists - move @ to the end and capitalize
+  if (creatorId.startsWith("@")) {
+    const nameWithoutAt = creatorId.slice(1); // Remove the @
+    const capitalizedName =
+      nameWithoutAt.charAt(0).toUpperCase() + nameWithoutAt.slice(1); // Capitalize first letter
+    return `${capitalizedName} @`;
+  }
+  // Handle base58 names (40+ char without spaces) - truncate to first 4 chars + "..."
+  if (creatorId.length >= 40 && !creatorId.includes(" ")) {
+    return `${creatorId.slice(0, 4)}...`;
+  }
+  // Handle custom artist names (they should be displayed as-is)
+  if (
+    creatorId.includes("Superteam") ||
+    creatorId.includes("SMB") ||
+    creatorId.includes("Faceless") ||
+    creatorId.includes("mooar.com") ||
+    creatorId.includes("3.land") ||
+    creatorId.includes("E3zH") ||
+    creatorId.includes("monmonmon") ||
+    creatorId.includes("MADhouse") ||
+    creatorId.includes("Poetonic") ||
+    creatorId.includes("thenetworkstate.com")
+  ) {
+    return creatorId;
+  }
   return creatorId;
 }
 
-const CACHE_KEY_PREFIX = "nft_v22_";
+const CACHE_KEY_PREFIX = "nft_v30_"; // Force cache refresh for custom artist names
 
 // Clear old cache versions
 const clearOldCache = () => {
@@ -68,19 +112,23 @@ export const sortGroupedNFTs = (
 
   const sorted = Object.entries(groupedNFTs).sort(
     ([aKey, aValue], [bKey, bValue]) => {
+      // Use display names for sorting to handle @ artists correctly
+      const aDisplayName = getDisplayName(aKey);
+      const bDisplayName = getDisplayName(bKey);
+
       switch (sortType) {
         case "quantityDesc":
           return bValue.length - aValue.length;
         case "quantityAsc":
           return aValue.length - bValue.length;
         case "nameAsc":
-          // Check if keys start with numbers
-          const aStartsWithNumber = /^\d/.test(aKey);
-          const bStartsWithNumber = /^\d/.test(bKey);
+          // Check if display names start with numbers
+          const aStartsWithNumber = /^\d/.test(aDisplayName);
+          const bStartsWithNumber = /^\d/.test(bDisplayName);
 
           // If both start with numbers, sort them alphabetically (as strings)
           if (aStartsWithNumber && bStartsWithNumber) {
-            return aKey.localeCompare(bKey);
+            return aDisplayName.localeCompare(bDisplayName);
           }
           // If only one starts with number, put numbers at the very end
           if (aStartsWithNumber && !bStartsWithNumber) {
@@ -90,15 +138,15 @@ export const sortGroupedNFTs = (
             return -1; // a goes before b
           }
           // Both are letters, use normal alphabetical comparison
-          return aKey.localeCompare(bKey);
+          return aDisplayName.localeCompare(bDisplayName);
         case "nameDesc":
-          // Check if keys start with numbers
-          const aStartsWithNumberDesc = /^\d/.test(aKey);
-          const bStartsWithNumberDesc = /^\d/.test(bKey);
+          // Check if display names start with numbers
+          const aStartsWithNumberDesc = /^\d/.test(aDisplayName);
+          const bStartsWithNumberDesc = /^\d/.test(bDisplayName);
 
           // If both start with numbers, sort them alphabetically (as strings, reverse)
           if (aStartsWithNumberDesc && bStartsWithNumberDesc) {
-            return bKey.localeCompare(aKey);
+            return bDisplayName.localeCompare(aDisplayName);
           }
           // If only one starts with number, put numbers at the very end
           if (aStartsWithNumberDesc && !bStartsWithNumberDesc) {
@@ -108,7 +156,7 @@ export const sortGroupedNFTs = (
             return -1; // a goes before b
           }
           // Both are letters, use reverse alphabetical comparison
-          return bKey.localeCompare(aKey);
+          return bDisplayName.localeCompare(aDisplayName);
         default:
           return 0;
       }
@@ -118,7 +166,7 @@ export const sortGroupedNFTs = (
   // Debug: Show the first 10 sorted results
   console.log(
     "📊 First 10 sorted results:",
-    sorted.slice(0, 10).map(([key]) => key)
+    sorted.slice(0, 10).map(([key]) => getDisplayName(key))
   );
 
   return sorted;
@@ -128,15 +176,15 @@ export const loadNFTs = async (
   address: string,
   viewType: "created" | "owned",
   sortType: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc",
-  typeFilter: "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam",
+  typeFilter: "all" | "drip" | "youtu" | "legit" | "???" | "spam",
   quantityFilter: "all" | ">3" | "1",
   setProgress: (progress: number) => void
 ): Promise<GroupedNFTs> => {
   // Clear old cache versions
   clearOldCache();
 
-  // Replace @ with at in cache key to avoid URL issues
-  const safeFilter = typeFilter === "@" ? "at" : typeFilter;
+  // Use typeFilter directly for cache key
+  const safeFilter = typeFilter;
   const cacheKey = `${CACHE_KEY_PREFIX}${address}_${viewType}_${safeFilter}`;
 
   // Check if cached data exists
@@ -156,6 +204,8 @@ export const loadNFTs = async (
   if (!address) return {};
   console.log("🔄 Fetching fresh data for:", typeFilter, "Key:", cacheKey);
 
+  // Debug: Log what we're about to fetch
+
   // Set initial progress
   setProgress(5);
 
@@ -170,6 +220,10 @@ export const loadNFTs = async (
 
   // Filter NFTs based on typeFilter
   let atSymbolCount = 0;
+  console.log(
+    `🔍 Starting filtering for ${typeFilter} with ${fetchedNFTs.length} NFTs`
+  );
+
   const filteredNFTs = fetchedNFTs.filter((nft) => {
     processedNFTs++;
     setProgress(20 + Math.floor((processedNFTs / totalNFTs) * 60));
@@ -177,44 +231,68 @@ export const loadNFTs = async (
     const creatorId = getCreatorIdentifier(nft);
     const creatorIdStr = String(creatorId);
     const isDrip = creatorIdStr.startsWith("DRIP:");
-    const isAtSymbol = creatorIdStr.startsWith("@");
+    // Check original address for @ symbol, not the transformed name
+    const originalAddress = nft.authorities?.[0]?.address;
+    const isAtSymbol = originalAddress?.startsWith("@");
     const isYoutu = creatorIdStr.toLowerCase().startsWith("youtu");
     const isLegit = isLegitArtist(nft);
-
-    // Debug logging for @ filter
-    if (typeFilter === "@") {
-      if (processedNFTs <= 10) {
-        console.log(
-          `🔍 NFT ${processedNFTs}: Creator ID = "${creatorIdStr}", isAtSymbol = ${isAtSymbol}`
-        );
-      }
-      if (isAtSymbol) {
-        atSymbolCount++;
-      }
-    }
 
     const creatorNFTs = fetchedNFTs.filter(
       (n) => getCreatorIdentifier(n) === creatorId
     );
     const isClaim = nft?.content?.metadata?.name?.startsWith("Claim");
+
+    // Check if it's a base58 name (40+ char without spaces)
+    const isBase58 = creatorIdStr.length >= 40 && !creatorIdStr.includes(" ");
+
     const isSpam =
       (creatorNFTs.length >= 3 &&
         !isDrip &&
         !isAtSymbol &&
         !isYoutu &&
-        !isLegit) ||
+        !isLegit &&
+        !isBase58) || // Exclude base58 names from spam
       isClaim;
 
+    // Debug: Log filtering decision for first few NFTs
+    if (processedNFTs <= 5) {
+      console.log(
+        `🔍 NFT ${processedNFTs}: Creator ID = "${creatorIdStr}", typeFilter = ${typeFilter}, isDrip = ${isDrip}, isAtSymbol = ${isAtSymbol}, isSpam = ${isSpam}`
+      );
+    }
+
     switch (typeFilter) {
+      case "all":
+        // Show all NFTs EXCEPT spam
+        return !isSpam;
       case "drip":
-        return isDrip;
-      case "@":
-        return isAtSymbol;
+        // Show OG Drip artists (that start with "DRIP: "), @ artists (ending with " @"), and base58 names
+        const shouldIncludeDrip = isDripArtist(creatorIdStr);
+
+        // Debug logging for drip filter
+        if (processedNFTs <= 10) {
+          console.log(
+            `🔍 Drip NFT ${processedNFTs}: Creator ID = "${creatorIdStr}", shouldInclude = ${shouldIncludeDrip}`
+          );
+        }
+
+        // Log ALL Drip items (not just first 10)
+        if (shouldIncludeDrip) {
+          console.log(`✅ Drip Item: "${creatorIdStr}" (isDripArtist: true)`);
+        }
+
+        return shouldIncludeDrip;
       case "youtu":
         return isYoutu;
       case "legit":
         return isLegit;
       case "spam":
+        // Log ALL Spam items to see what's being included
+        if (isSpam) {
+          console.log(
+            `🚨 Spam Item: "${creatorIdStr}" (isDrip: ${isDrip}, isAtSymbol: ${isAtSymbol}, isYoutu: ${isYoutu}, isLegit: ${isLegit}, isBase58: ${isBase58}, isClaim: ${isClaim})`
+          );
+        }
         return isSpam;
       case "???":
         return !isDrip && !isAtSymbol && !isYoutu && !isLegit && !isSpam;
@@ -224,9 +302,48 @@ export const loadNFTs = async (
   });
 
   // Debug logging after filtering
-  if (typeFilter === "@") {
+  console.log(
+    `📊 ${typeFilter} Filter complete: ${filteredNFTs.length} NFTs passed the filter`
+  );
+
+  if (typeFilter === "all") {
+    const spamCount = fetchedNFTs.filter((nft) => {
+      const creatorId = getCreatorIdentifier(nft);
+      const creatorIdStr = String(creatorId);
+      const isDrip = creatorIdStr.startsWith("DRIP:");
+      const originalAddress = nft.authorities?.[0]?.address;
+      const isAtSymbol = originalAddress?.startsWith("@");
+      const isYoutu = creatorIdStr.toLowerCase().startsWith("youtu");
+      const isLegit = isLegitArtist(nft);
+      const creatorNFTs = fetchedNFTs.filter(
+        (n) => getCreatorIdentifier(n) === creatorId
+      );
+      const isClaim = nft?.content?.metadata?.name?.startsWith("Claim");
+      const isSpam =
+        (creatorNFTs.length >= 3 &&
+          !isDrip &&
+          !isAtSymbol &&
+          !isYoutu &&
+          !isLegit) ||
+        isClaim;
+      return isSpam;
+    }).length;
     console.log(
-      `📊 @ Filter complete: Found ${atSymbolCount} NFTs with @ creators`
+      `📊 All Filter complete: Excluded ${spamCount} spam NFTs, ${filteredNFTs.length} NFTs remaining`
+    );
+  }
+
+  if (typeFilter === "drip") {
+    const dripCount = filteredNFTs.filter((nft) => {
+      const creatorId = getCreatorIdentifier(nft);
+      return creatorId.startsWith("DRIP:");
+    }).length;
+    const atCount = filteredNFTs.filter((nft) => {
+      const creatorId = getCreatorIdentifier(nft);
+      return creatorId.endsWith(" @");
+    }).length;
+    console.log(
+      `📊 Drip Filter complete: Found ${dripCount} OG Drip artists, ${atCount} @ artists (${filteredNFTs.length} total)`
     );
   }
 
@@ -234,7 +351,19 @@ export const loadNFTs = async (
 
   // Group and sort the filtered NFTs
   const tempGrouped = filteredNFTs.reduce((acc: GroupedNFTs, nft) => {
-    const creatorId = getCreatorIdentifier(nft);
+    let creatorId = getCreatorIdentifier(nft);
+
+    // For legit artists, use the custom artist name if available
+    if (typeFilter === "legit") {
+      const customName = getLegitArtistName(nft);
+      if (customName) {
+        console.log(
+          `🎨 Custom artist detected: "${creatorId}" -> "${customName}"`
+        );
+        creatorId = customName;
+      }
+    }
+
     if (!acc[creatorId]) {
       acc[creatorId] = [];
     }
@@ -276,7 +405,17 @@ export const getCreatorIdentifier = (nft: NFTAsset): string => {
   );
   if (artistAttribute?.value) return artistAttribute.value;
   if (nft.content.metadata.symbol) return nft.content.metadata.symbol;
-  if (nft.authorities?.[0]?.address) return nft.authorities[0].address;
+  if (nft.authorities?.[0]?.address) {
+    const address = nft.authorities[0].address;
+    // Check if it starts with @ and move it to the end
+    if (address.startsWith("@")) {
+      const nameWithoutAt = address.slice(1); // Remove the @
+      const capitalizedName =
+        nameWithoutAt.charAt(0).toUpperCase() + nameWithoutAt.slice(1); // Capitalize first letter
+      return `${capitalizedName} @`;
+    }
+    return address;
+  }
 
   // Use creator_hash as fallback instead of leaf_id
   if (nft.compression?.creator_hash) {

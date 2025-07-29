@@ -5,6 +5,7 @@ import Image from "next/image";
 import { calculateSize } from "@/utils/zoomUtils";
 import { getImageUrl, getDisplayName } from "@/utils/loadNFTs";
 import { ZoomLevel } from "@/types";
+import ArtistName from "./ArtistName";
 
 interface View3Props {
   nfts: { [symbol: string]: NFTAsset[] };
@@ -99,14 +100,8 @@ const View3: React.FC<View3Props> = ({
             flexShrink: 0,
           }}
         >
-          <h2
-            className="text-2xl font-bold text-white mb-4 truncate text-center"
-            style={{
-              maxWidth: getTitleMaxWidth(creatorNFTs.length),
-              margin: "0 auto 1rem auto",
-            }}
-          >
-            {getDisplayName(creator)}
+          <h2 className="text-xl font-semibold text-gray-300 title-overflow mb-4">
+            <ArtistName creatorId={creator} />
           </h2>
           <div className="relative">
             <div className="flex space-x-4 overflow-x-auto scrollbar-hide pb-2 justify-center">
@@ -132,6 +127,24 @@ const View3: React.FC<View3Props> = ({
                       fill
                       unoptimized={true}
                     />
+                    {/* Play icon for videos */}
+                    {nft.content.links?.animation_url && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black/30 rounded-full p-4">
+                          <svg
+                            className="w-12 h-12 text-white/50"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-2 text-center">
                     <h3 className="text-white text-sm truncate max-w-[240px]">

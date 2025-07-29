@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { NFTAsset } from "@/utils/helius";
 import NFTMetadata from "./NFTMetadata";
+import AnimationModal from "./AnimationModal";
 import { getImageUrl } from "@/utils/loadNFTs";
 
 interface NFTModalProps {
@@ -23,6 +24,8 @@ const NFTModal: React.FC<NFTModalProps> = ({
 }) => {
   const [isShowing, setIsShowing] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [showMetadata, setShowMetadata] = useState(true);
+  const [showAnimation, setShowAnimation] = useState(false);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -35,16 +38,20 @@ const NFTModal: React.FC<NFTModalProps> = ({
         setIsShowing(true);
       });
 
-      const handleEsc = (event: KeyboardEvent) => {
+      const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
           handleClose();
+        } else if (event.key === "ArrowLeft") {
+          handlePrevious();
+        } else if (event.key === "ArrowRight") {
+          handleNext();
         }
       };
-      window.addEventListener("keydown", handleEsc);
+      window.addEventListener("keydown", handleKeyDown);
 
       return () => {
         document.body.style.overflow = "unset";
-        window.removeEventListener("keydown", handleEsc);
+        window.removeEventListener("keydown", handleKeyDown);
       };
     }
   }, [isOpen]);
@@ -64,10 +71,25 @@ const NFTModal: React.FC<NFTModalProps> = ({
     return getImageUrl(imageUrl || "");
   };
 
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : nfts.length - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev < nfts.length - 1 ? prev + 1 : 0));
+  };
+
+  const handlePlayAnimation = () => {
+    const animationUrl = nfts[currentIndex].content.links?.animation_url;
+    if (animationUrl) {
+      setShowAnimation(true);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50" onClick={handleClose}>
       <div
-        className={`absolute inset-0 bg-black modal-background ${
+        className={`absolute inset-0 bg-gray-900/95 modal-background ${
           isShowing ? "show" : ""
         }`}
         style={{
@@ -75,7 +97,7 @@ const NFTModal: React.FC<NFTModalProps> = ({
         }}
       />
       <div
-        className={`absolute rounded-xl bg-gray-900/80 modal-expand ${
+        className={`absolute rounded-xl bg-gray-900/95 modal-expand ${
           isShowing ? "show" : ""
         }`}
         style={{
@@ -101,7 +123,7 @@ const NFTModal: React.FC<NFTModalProps> = ({
           <div className="flex-1 w-full relative">
             {/* Centered Image and Title */}
             <div className="w-full flex flex-col items-center">
-              <div className="h-[65vh] flex justify-center items-center">
+              <div className="h-[65vh] flex justify-center items-center relative">
                 <Image
                   src={getImageSrc(currentIndex)}
                   alt={nfts[currentIndex].content.metadata.name || "NFT Image"}
@@ -111,27 +133,106 @@ const NFTModal: React.FC<NFTModalProps> = ({
                   unoptimized={true}
                   onClick={(e) => e.stopPropagation()}
                 />
+                {/* Play icon for videos */}
+                {nfts[currentIndex].content.links?.animation_url && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePlayAnimation();
+                      }}
+                      className="absolute inset-0 bg-transparent hover:bg-black/10 transition-colors"
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black/30 rounded-full p-4">
+                          <svg
+                            className="w-12 h-12 text-white/50"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
               {/* Title under image */}
               <div
                 className="text-center text-white mt-8"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-bold mb-4">
                   {nfts[currentIndex].content.metadata.name}
                 </h3>
+
+                {/* Navigation arrows */}
+                {nfts.length > 1 && (
+                  <div className="flex justify-center items-center gap-4">
+                    <button
+                      onClick={handlePrevious}
+                      className="bg-gray-800/50 hover:bg-gray-700/50 text-white p-2 rounded-full transition-colors"
+                    >
+                      ←
+                    </button>
+                    <span className="text-gray-400 text-sm">
+                      {currentIndex + 1} / {nfts.length}
+                    </span>
+                    <button
+                      onClick={handleNext}
+                      className="bg-gray-800/50 hover:bg-gray-700/50 text-white p-2 rounded-full transition-colors"
+                    >
+                      →
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Floating metadata sidebar - now wider and with unified panel */}
-            <div
-              className="absolute top-0 right-8 w-96 h-[65vh] bg-gray-800/30 rounded-xl overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="h-full p-6 overflow-y-auto">
-                <NFTMetadata nft={nfts[currentIndex]} />
+            {/* Floating metadata sidebar with toggle */}
+            {showMetadata && (
+              <div
+                className="absolute top-0 right-8 w-96 h-[65vh] bg-gray-800/70 rounded-xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="h-full p-6 overflow-y-auto">
+                  <NFTMetadata nft={nfts[currentIndex]} />
+                </div>
+                {/* Close button for metadata panel */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMetadata(false);
+                  }}
+                  className="absolute top-2 right-2 text-white hover:text-gray-300 text-xl z-50 bg-gray-700/50 hover:bg-gray-600/50 px-2 py-1 rounded"
+                >
+                  ×
+                </button>
               </div>
-            </div>
+            )}
+
+            {/* Open button for metadata panel - positioned where the panel would be */}
+            {!showMetadata && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMetadata(true);
+                }}
+                className="absolute top-2 text-white hover:text-gray-300 text-xl z-50 bg-gray-700/50 hover:bg-gray-600/50 px-2 py-1 rounded"
+                style={{
+                  right: "40px", // 8px more than right-8 (32px + 8px = 40px)
+                }}
+              >
+                +
+              </button>
+            )}
           </div>
 
           {/* Close button */}
@@ -178,6 +279,15 @@ const NFTModal: React.FC<NFTModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Animation Modal */}
+      {showAnimation && (
+        <AnimationModal
+          isOpen={showAnimation}
+          onClose={() => setShowAnimation(false)}
+          url={nfts[currentIndex].content.links?.animation_url || ""}
+        />
+      )}
     </div>
   );
 };

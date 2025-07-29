@@ -11,9 +11,9 @@ interface HeaderProps {
   setSortType: (
     sortType: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
   ) => void;
-  typeFilter: "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam";
+  typeFilter: "all" | "drip" | "youtu" | "legit" | "???" | "spam";
   setTypeFilter: (
-    typeFilter: "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam"
+    typeFilter: "all" | "drip" | "youtu" | "legit" | "???" | "spam"
   ) => void;
   inspectorFilter: "all" | "animations" | "immutable" | "cNFT";
   handleInspectorFilterChange: (
@@ -21,11 +21,12 @@ interface HeaderProps {
   ) => void;
   loadNFTs: () => void;
   additionalAddresses: string[];
-  viewMode: "1" | "2" | "3";
-  setViewMode: (viewMode: "1" | "2" | "3") => void;
+  viewMode: "2" | "3";
+  setViewMode: (viewMode: "2" | "3") => void;
   zoomLevel: ZoomLevel;
   onZoomChange: (newLevel: ZoomLevel) => void;
   nfts: { [key: string]: any[] };
+  showModules: boolean; // New prop to control module visibility
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -46,6 +47,7 @@ const Header: React.FC<HeaderProps> = ({
   zoomLevel,
   onZoomChange,
   nfts,
+  showModules,
 }) => {
   // Function to truncate address for display
   const truncateAddress = (addr: string): string => {
@@ -107,260 +109,246 @@ const Header: React.FC<HeaderProps> = ({
                     key={index}
                     onClick={() => {
                       setAddress(addr);
-                      // Small delay to ensure address is set before triggering load
-                      setTimeout(() => loadNFTs(), 10);
                     }}
                     className="px-2 py-1 text-xs bg-gray-600 text-gray-300 hover:bg-gray-500 rounded"
                   >
-                    Wallet Test {index + 1}
+                    Test {index + 1}
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Right Side - VIEW and ZOOM */}
-          <div className="flex items-center space-x-4">
-            {/* VIEW Section */}
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500">VIEW</span>
-              <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
-                <button
-                  onClick={() => setViewMode("1")}
-                  className={`px-3 py-1 rounded-l-lg ${
-                    viewMode === "1"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  1
-                </button>
-                <button
-                  onClick={() => setViewMode("2")}
-                  className={`px-3 py-1 ${
-                    viewMode === "2"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  2
-                </button>
-                <button
-                  onClick={() => setViewMode("3")}
-                  className={`px-3 py-1 rounded-r-lg ${
-                    viewMode === "3"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  3
-                </button>
+          {/* Right Side - Only show when showModules is true */}
+          {showModules && (
+            <>
+              {/* VIEW Section */}
+              <div className="flex flex-col space-y-1">
+                <span className="text-xs text-gray-500 text-center">VIEW</span>
+                <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+                  <button
+                    onClick={() => setViewMode("2")}
+                    className={`px-3 py-1 rounded-l-lg ${
+                      viewMode === "2"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Grid
+                  </button>
+                  <button
+                    onClick={() => setViewMode("3")}
+                    className={`px-3 py-1 rounded-r-lg ${
+                      viewMode === "3"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Strip
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* ZOOM Section */}
-            <ZoomControl zoomLevel={zoomLevel} onZoomChange={onZoomChange} />
-          </div>
+              {/* ZOOM Section */}
+              <ZoomControl zoomLevel={zoomLevel} onZoomChange={onZoomChange} />
+            </>
+          )}
         </div>
 
-        {/* ARTIST Row - Centered with 5 sections */}
-        <div className="flex justify-center">
-          <div className="flex space-x-6">
-            {/* Stats Section */}
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500 text-center">&nbsp;</span>
-              <div
-                className="bg-gray-700 px-4 py-2 rounded-lg min-w-[200px] flex items-center justify-center"
-                style={{ minHeight: "48px" }}
-              >
-                <div className="flex space-x-4 text-xs text-gray-400">
-                  <span>NFTs: {Object.values(nfts).flat().length}</span>
-                  <span>Artists: {Object.keys(nfts).length}</span>
-                  <span>
-                    Videos:{" "}
-                    {
-                      Object.values(nfts)
-                        .flat()
-                        .filter((nft) => nft.content.links?.animation_url)
-                        .length
-                    }
-                  </span>
+        {/* ARTIST Row - Only show when showModules is true */}
+        {showModules && (
+          <div className="flex justify-center">
+            <div className="flex space-x-6">
+              {/* Stats Section */}
+              <div className="flex flex-col space-y-1">
+                <span className="text-xs text-gray-500 text-center">
+                  &nbsp;
+                </span>
+                <div
+                  className="bg-gray-700 px-4 py-2 rounded-lg min-w-[200px] flex items-center justify-center"
+                  style={{ minHeight: "48px" }}
+                >
+                  <div className="flex space-x-4 text-xs text-gray-400">
+                    <span>NFTs: {Object.values(nfts).flat().length}</span>
+                    <span>Artists: {Object.keys(nfts).length}</span>
+                    <span>
+                      Videos:{" "}
+                      {
+                        Object.values(nfts)
+                          .flat()
+                          .filter((nft) => nft.content.links?.animation_url)
+                          .length
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ORDER Section */}
+              <div className="flex flex-col space-y-1">
+                <span className="text-xs text-gray-500 text-center">ORDER</span>
+                <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+                  <button
+                    onClick={() => setSortType("quantityDesc")}
+                    className={`px-3 py-1 rounded-l-lg ${
+                      sortType === "quantityDesc"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    # ↓
+                  </button>
+                  <button
+                    onClick={() => setSortType("quantityAsc")}
+                    className={`px-3 py-1 ${
+                      sortType === "quantityAsc"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    # ↑
+                  </button>
+                  <button
+                    onClick={() => setSortType("nameAsc")}
+                    className={`px-3 py-1 ${
+                      sortType === "nameAsc"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Abc
+                  </button>
+                  <button
+                    onClick={() => setSortType("nameDesc")}
+                    className={`px-3 py-1 rounded-r-lg ${
+                      sortType === "nameDesc"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Zyx
+                  </button>
+                </div>
+              </div>
+
+              {/* ARTIST Section */}
+              <div className="flex flex-col space-y-1">
+                <span className="text-xs text-gray-500 text-center">
+                  ARTIST
+                </span>
+                <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+                  <button
+                    onClick={() => setTypeFilter("all")}
+                    className={`px-3 py-1 rounded-l-lg ${
+                      typeFilter === "all"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setTypeFilter("legit")}
+                    className={`px-3 py-1 ${
+                      typeFilter === "legit"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Legit
+                  </button>
+                  <button
+                    onClick={() => setTypeFilter("drip")}
+                    className={`px-3 py-1 ${
+                      typeFilter === "drip"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Drip
+                  </button>
+                  <button
+                    onClick={() => setTypeFilter("youtu")}
+                    className={`px-3 py-1 ${
+                      typeFilter === "youtu"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Youtu
+                  </button>
+                  <button
+                    onClick={() => setTypeFilter("spam")}
+                    className={`px-3 py-1 ${
+                      typeFilter === "spam"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Spam
+                  </button>
+                  <button
+                    onClick={() => setTypeFilter("???")}
+                    className={`px-3 py-1 rounded-r-lg ${
+                      typeFilter === "???"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    ???
+                  </button>
+                </div>
+              </div>
+
+              {/* NFT Section */}
+              <div className="flex flex-col space-y-1">
+                <span className="text-xs text-gray-500 text-center">NFT</span>
+                <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
+                  <button
+                    onClick={() => handleInspectorFilterChange("all")}
+                    className={`px-3 py-1 rounded-l-lg ${
+                      inspectorFilter === "all"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => handleInspectorFilterChange("animations")}
+                    className={`px-3 py-1 ${
+                      inspectorFilter === "animations"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Videos
+                  </button>
+                  <button
+                    onClick={() => handleInspectorFilterChange("immutable")}
+                    className={`px-3 py-1 ${
+                      inspectorFilter === "immutable"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    Immutable
+                  </button>
+                  <button
+                    onClick={() => handleInspectorFilterChange("cNFT")}
+                    className={`px-3 py-1 rounded-r-lg ${
+                      inspectorFilter === "cNFT"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                    }`}
+                  >
+                    cNFT
+                  </button>
                 </div>
               </div>
             </div>
-
-            {/* ORDER Section */}
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500 text-center">ORDER</span>
-              <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
-                <button
-                  onClick={() => setSortType("quantityDesc")}
-                  className={`px-3 py-1 rounded-l-lg ${
-                    sortType === "quantityDesc"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  # ↓
-                </button>
-                <button
-                  onClick={() => setSortType("quantityAsc")}
-                  className={`px-3 py-1 ${
-                    sortType === "quantityAsc"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  # ↑
-                </button>
-                <button
-                  onClick={() => setSortType("nameAsc")}
-                  className={`px-3 py-1 ${
-                    sortType === "nameAsc"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Abc
-                </button>
-                <button
-                  onClick={() => setSortType("nameDesc")}
-                  className={`px-3 py-1 rounded-r-lg ${
-                    sortType === "nameDesc"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Zyx
-                </button>
-              </div>
-            </div>
-
-            {/* ARTIST Section */}
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500 text-center">ARTIST</span>
-              <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
-                <button
-                  onClick={() => setTypeFilter("all")}
-                  className={`px-3 py-1 rounded-l-lg ${
-                    typeFilter === "all"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setTypeFilter("drip")}
-                  className={`px-3 py-1 ${
-                    typeFilter === "drip"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Drip
-                </button>
-                <button
-                  onClick={() => setTypeFilter("@")}
-                  className={`px-3 py-1 ${
-                    typeFilter === "@"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  @
-                </button>
-                <button
-                  onClick={() => setTypeFilter("youtu")}
-                  className={`px-3 py-1 ${
-                    typeFilter === "youtu"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Youtu
-                </button>
-                <button
-                  onClick={() => setTypeFilter("legit")}
-                  className={`px-3 py-1 ${
-                    typeFilter === "legit"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Legit
-                </button>
-                <button
-                  onClick={() => setTypeFilter("???")}
-                  className={`px-3 py-1 ${
-                    typeFilter === "???"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  ???
-                </button>
-                <button
-                  onClick={() => setTypeFilter("spam")}
-                  className={`px-3 py-1 rounded-r-lg ${
-                    typeFilter === "spam"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Spam
-                </button>
-              </div>
-            </div>
-
-            {/* NFT Section */}
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs text-gray-500 text-center">NFT</span>
-              <div className="flex space-x-0 bg-gray-700 p-2 rounded-lg">
-                <button
-                  onClick={() => handleInspectorFilterChange("all")}
-                  className={`px-3 py-1 rounded-l-lg ${
-                    inspectorFilter === "all"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => handleInspectorFilterChange("animations")}
-                  className={`px-3 py-1 ${
-                    inspectorFilter === "animations"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Animations
-                </button>
-                <button
-                  onClick={() => handleInspectorFilterChange("immutable")}
-                  className={`px-3 py-1 ${
-                    inspectorFilter === "immutable"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  Immutable
-                </button>
-                <button
-                  onClick={() => handleInspectorFilterChange("cNFT")}
-                  className={`px-3 py-1 rounded-r-lg ${
-                    inspectorFilter === "cNFT"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                  }`}
-                >
-                  cNFT
-                </button>
-              </div>
-            </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   );

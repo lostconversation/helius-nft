@@ -5,7 +5,6 @@ import { loadNFTs, sortGroupedNFTs } from "@/utils/loadNFTs";
 import Header from "@/components/Header";
 import LoadingPopup from "@/components/LoadingPopup";
 import { NFTAsset } from "@/utils/helius";
-import View1 from "@/components/View1";
 import View2 from "@/components/View2";
 import View3 from "@/components/View3";
 import { ViewMode, ZoomLevel } from "@/types/index";
@@ -30,8 +29,8 @@ export default function Home() {
   const [displayMode, setDisplayMode] = useState<"grid" | "data">("grid");
   const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
   const [typeFilter, setTypeFilter] = useState<
-    "all" | "drip" | "@" | "youtu" | "legit" | "???" | "spam"
-  >("legit");
+    "all" | "drip" | "youtu" | "legit" | "???" | "spam"
+  >("drip"); // Default to drip
   const [quantityFilter, setQuantityFilter] = useState<"all" | ">3" | "1">(
     "all"
   );
@@ -44,9 +43,10 @@ export default function Home() {
     process.env.NEXT_PUBLIC_ADDRESS_2 || "",
     process.env.NEXT_PUBLIC_ADDRESS_3 || "",
   ]);
-  const [viewMode, setViewMode] = useState<ViewMode>("3");
+  const [viewMode, setViewMode] = useState<ViewMode>("2"); // Default to view 2
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("normal");
   const [loadTrigger, setLoadTrigger] = useState(0);
+  const [showModules, setShowModules] = useState(false); // Control module visibility
 
   const handleInspectorFilterChange = (
     filter: "all" | "animations" | "immutable" | "cNFT"
@@ -60,11 +60,20 @@ export default function Home() {
       if (!address) return;
 
       setLoading(true);
+      setShowModules(true); // Show modules when loading starts
       try {
         console.log("🚀 Loading ALL categories for wallet:", address);
 
+        // Clear cache to force fresh data
+        const keys = Object.keys(localStorage);
+        const cacheKeys = keys.filter((key) => key.startsWith("nft_v"));
+        cacheKeys.forEach((key) => localStorage.removeItem(key));
+        console.log(
+          `🗑️ Cleared ${cacheKeys.length} cache entries to force fresh data`
+        );
+
         // Load OG tags first (fast)
-        const ogCategories = ["all", "drip", "@", "youtu"];
+        const ogCategories = ["all", "drip", "youtu"];
         const allCategoriesData: any = {};
 
         console.log("⚡ Loading OG tags (fast)...");
@@ -106,10 +115,15 @@ export default function Home() {
         }
 
         setAllCategories(allCategoriesData);
-        setNfts(allCategoriesData.legit); // Start with legit
+        setNfts(allCategoriesData.drip); // Start with drip
         setProgress(100);
 
         console.log("✅ All categories loaded and cached");
+        console.log("📊 Categories loaded:", Object.keys(allCategoriesData));
+        console.log(
+          "📊 DripNew artists:",
+          Object.keys(allCategoriesData.dripnew || {})
+        );
       } catch (error) {
         console.error("Error loading NFTs:", error);
       } finally {
@@ -130,7 +144,6 @@ export default function Home() {
     const categoryMap: { [key: string]: string } = {
       all: "all",
       drip: "drip",
-      "@": "at",
       youtu: "youtu",
       legit: "legit",
       spam: "spam",
@@ -144,6 +157,8 @@ export default function Home() {
           Object.keys(allCategories[categoryKey]).length
         } artists for ${typeFilter}`
       );
+      console.log("📊 Available categories:", Object.keys(allCategories));
+      console.log("📊 DripNew data:", Object.keys(allCategories.dripnew || {}));
 
       // Apply sorting on the client side
       const sortedGrouped = sortGroupedNFTs(
@@ -210,6 +225,7 @@ export default function Home() {
 
   const handleLoadNFTs = () => {
     if (address) {
+      setShowModules(true); // Show modules when search starts
       // Trigger the useEffect by incrementing the load trigger
       setLoadTrigger((prev) => prev + 1);
     }
@@ -217,15 +233,6 @@ export default function Home() {
 
   const renderCurrentView = () => {
     switch (viewMode) {
-      case "1":
-        return (
-          <View1
-            nfts={filterNFTs(nfts)}
-            openSymbols={openSymbols}
-            toggleSymbol={toggleSymbol}
-            zoomLevel={zoomLevel}
-          />
-        );
       case "2":
         return (
           <View2
@@ -270,6 +277,7 @@ export default function Home() {
         zoomLevel={zoomLevel}
         onZoomChange={handleZoomChange}
         nfts={filterNFTs(nfts)}
+        showModules={showModules}
       />
       <div className="p-4">{renderCurrentView()}</div>
     </div>

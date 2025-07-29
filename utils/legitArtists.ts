@@ -2,7 +2,7 @@ import { getCustomArtistName, isCustomArtist } from "./customArtists";
 
 export function getLegitArtistName(nft: any): string | null {
   try {
-    // Get the creator identifier using the same logic as getCreatorIdentifier
+    // Use the same logic as getCreatorIdentifier
     const dripHausUrl = nft.content.links?.external_url;
     const isDripProject =
       dripHausUrl?.startsWith("https://drip.haus/") ||
@@ -23,12 +23,24 @@ export function getLegitArtistName(nft: any): string | null {
       );
       if (artistAttribute?.value) {
         creatorId = artistAttribute.value;
-      } else if (nft.compression?.leaf_id) {
-        creatorId = nft.compression.leaf_id;
       } else if (nft.content.metadata.symbol) {
         creatorId = nft.content.metadata.symbol;
+      } else if (nft.authorities?.[0]?.address) {
+        const address = nft.authorities[0].address;
+        // Check if it starts with @ and move it to the end
+        if (address.startsWith("@")) {
+          const nameWithoutAt = address.slice(1); // Remove the @
+          const capitalizedName =
+            nameWithoutAt.charAt(0).toUpperCase() + nameWithoutAt.slice(1); // Capitalize first letter
+          creatorId = `${capitalizedName} @`;
+        } else {
+          creatorId = address;
+        }
+      } else if (nft.compression?.creator_hash) {
+        const hash = nft.compression.creator_hash;
+        creatorId = `${hash.slice(0, 4)}...`;
       } else {
-        creatorId = nft.authorities?.[0]?.address || "Unknown";
+        creatorId = "Unknown";
       }
     }
 
@@ -45,7 +57,7 @@ export function getLegitArtistName(nft: any): string | null {
 
 export function isLegitArtist(nft: any): boolean {
   try {
-    // Get the creator identifier using the same logic as getCreatorIdentifier
+    // Use the same logic as getCreatorIdentifier
     const dripHausUrl = nft.content.links?.external_url;
     const isDripProject =
       dripHausUrl?.startsWith("https://drip.haus/") ||
@@ -66,12 +78,24 @@ export function isLegitArtist(nft: any): boolean {
       );
       if (artistAttribute?.value) {
         creatorId = artistAttribute.value;
-      } else if (nft.compression?.leaf_id) {
-        creatorId = nft.compression.leaf_id;
       } else if (nft.content.metadata.symbol) {
         creatorId = nft.content.metadata.symbol;
+      } else if (nft.authorities?.[0]?.address) {
+        const address = nft.authorities[0].address;
+        // Check if it starts with @ and move it to the end
+        if (address.startsWith("@")) {
+          const nameWithoutAt = address.slice(1); // Remove the @
+          const capitalizedName =
+            nameWithoutAt.charAt(0).toUpperCase() + nameWithoutAt.slice(1); // Capitalize first letter
+          creatorId = `${capitalizedName} @`;
+        } else {
+          creatorId = address;
+        }
+      } else if (nft.compression?.creator_hash) {
+        const hash = nft.compression.creator_hash;
+        creatorId = `${hash.slice(0, 4)}...`;
       } else {
-        creatorId = nft.authorities?.[0]?.address || "Unknown";
+        creatorId = "Unknown";
       }
     }
 
