@@ -12,7 +12,7 @@ const LoadingPopup: React.FC<LoadingPopupProps> = ({ progress, message }) => {
     if (progress < 20) return "Fetching NFTs...";
     if (progress < 30) return "Loading Drip NFTs...";
     if (progress < 40) return "Loading @ NFTs...";
-    if (progress < 50) return "Loading Youtu NFTs...";
+    if (progress < 50) return "Loading Drip NFTs...";
     if (progress < 60) return "Scanning for Legit Artists...";
     if (progress < 80) return "Scanning for Spam...";
     if (progress < 90) return "Scanning for ???...";
@@ -21,7 +21,7 @@ const LoadingPopup: React.FC<LoadingPopupProps> = ({ progress, message }) => {
 
   const getSubMessage = () => {
     if (progress < 20) return "Downloading NFT data from blockchain...";
-    if (progress < 50) return "Quick scan of OG tags (Drip, @, Youtu)...";
+    if (progress < 50) return "Quick scan of OG tags (Drip, @)...";
     if (progress < 90) return "Deep scan of custom artist rules...";
     return "Organizing results...";
   };

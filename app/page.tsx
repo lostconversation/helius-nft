@@ -29,8 +29,8 @@ export default function Home() {
   const [displayMode, setDisplayMode] = useState<"grid" | "data">("grid");
   const [layoutMode, setLayoutMode] = useState<"mosaic" | "list">("list");
   const [typeFilter, setTypeFilter] = useState<
-    "all" | "drip" | "youtu" | "legit" | "???" | "spam"
-  >("drip"); // Default to drip
+    "all" | "drip" | "legit" | "???" | "spam"
+  >("legit"); // Default to Legit
   const [quantityFilter, setQuantityFilter] = useState<"all" | ">3" | "1">(
     "all"
   );
@@ -47,6 +47,7 @@ export default function Home() {
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("normal");
   const [loadTrigger, setLoadTrigger] = useState(0);
   const [showModules, setShowModules] = useState(false); // Control module visibility
+  const [totalNFTsInWallet, setTotalNFTsInWallet] = useState(0);
 
   const handleInspectorFilterChange = (
     filter: "all" | "animations" | "immutable" | "cNFT"
@@ -73,7 +74,7 @@ export default function Home() {
         );
 
         // Load OG tags first (fast)
-        const ogCategories = ["all", "drip", "youtu"];
+        const ogCategories = ["all", "drip"];
         const allCategoriesData: any = {};
 
         console.log("⚡ Loading OG tags (fast)...");
@@ -116,6 +117,32 @@ export default function Home() {
 
         setAllCategories(allCategoriesData);
         setNfts(allCategoriesData.drip); // Start with drip
+
+        // Calculate total NFTs in wallet (including spam)
+        let totalCount = 0;
+        const allNFTs = new Set(); // Use Set to avoid duplicates
+
+        // Debug: Log category counts
+        console.log("🔍 Category breakdown:");
+        Object.entries(allCategoriesData).forEach(
+          ([category, categoryNFTs]: [string, any]) => {
+            const categoryCount = Object.values(categoryNFTs).flat().length;
+            console.log(`  ${category}: ${categoryCount} NFTs`);
+          }
+        );
+
+        Object.values(allCategoriesData).forEach((categoryNFTs: any) => {
+          Object.values(categoryNFTs).forEach((nfts: any) => {
+            nfts.forEach((nft: any) => {
+              // Use NFT ID to ensure uniqueness
+              allNFTs.add(nft.id);
+            });
+          });
+        });
+
+        console.log(`🔍 Total unique NFTs: ${allNFTs.size}`);
+        setTotalNFTsInWallet(allNFTs.size);
+
         setProgress(100);
 
         console.log("✅ All categories loaded and cached");
@@ -144,7 +171,7 @@ export default function Home() {
     const categoryMap: { [key: string]: string } = {
       all: "all",
       drip: "drip",
-      youtu: "youtu",
+      // Removed youtu
       legit: "legit",
       spam: "spam",
       "???": "???",
@@ -278,6 +305,8 @@ export default function Home() {
         onZoomChange={handleZoomChange}
         nfts={filterNFTs(nfts)}
         showModules={showModules}
+        totalNFTsInWallet={totalNFTsInWallet}
+        allCategories={allCategories}
       />
       <div className="p-4">{renderCurrentView()}</div>
     </div>

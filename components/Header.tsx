@@ -11,9 +11,9 @@ interface HeaderProps {
   setSortType: (
     sortType: "quantityDesc" | "quantityAsc" | "nameAsc" | "nameDesc"
   ) => void;
-  typeFilter: "all" | "drip" | "youtu" | "legit" | "???" | "spam";
+  typeFilter: "all" | "drip" | "legit" | "???" | "spam";
   setTypeFilter: (
-    typeFilter: "all" | "drip" | "youtu" | "legit" | "???" | "spam"
+    typeFilter: "all" | "drip" | "legit" | "???" | "spam"
   ) => void;
   inspectorFilter: "all" | "animations" | "immutable" | "cNFT";
   handleInspectorFilterChange: (
@@ -27,6 +27,8 @@ interface HeaderProps {
   onZoomChange: (newLevel: ZoomLevel) => void;
   nfts: { [key: string]: any[] };
   showModules: boolean; // New prop to control module visibility
+  totalNFTsInWallet: number;
+  allCategories?: { [key: string]: { [key: string]: any[] } } | null;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -48,6 +50,8 @@ const Header: React.FC<HeaderProps> = ({
   onZoomChange,
   nfts,
   showModules,
+  totalNFTsInWallet,
+  allCategories,
 }) => {
   // Function to truncate address for display
   const truncateAddress = (addr: string): string => {
@@ -161,8 +165,8 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex space-x-6">
               {/* Stats Section */}
               <div className="flex flex-col space-y-1">
-                <span className="text-xs text-gray-500 text-center">
-                  &nbsp;
+                <span className="text-xs text-gray-500/70 text-center">
+                  TOTAL (All+Spam): {totalNFTsInWallet}
                 </span>
                 <div
                   className="bg-gray-700 px-4 py-2 rounded-lg min-w-[200px] flex items-center justify-center"
@@ -267,16 +271,7 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     Drip
                   </button>
-                  <button
-                    onClick={() => setTypeFilter("youtu")}
-                    className={`px-3 py-1 ${
-                      typeFilter === "youtu"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    Youtu
-                  </button>
+                  {/* Removed youtu button */}
                   <button
                     onClick={() => setTypeFilter("spam")}
                     className={`px-3 py-1 ${
