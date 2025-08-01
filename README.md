@@ -1,12 +1,12 @@
 # 🖼️ Solana NFT Viewer
 
-A powerful, lightning-fast NFT viewer for Solana wallets with intelligent clustering and filtering!
+A powerful NFT viewer for Solana wallets with intelligent clustering and filtering!
 
 ---
 
 ## How it Looks
 
-![Solana NFT Viewer](public/sol_nft_app-1.png)
+https://github.com/user-attachments/assets/e3df79aa-7e9f-4cb9-b103-57702b1f0345
 
 ---
 
